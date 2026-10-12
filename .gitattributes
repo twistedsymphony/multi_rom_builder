@@ -1,0 +1,5 @@
+*.ips binary
+*.bat text eol=crlf
+kits/**/*.txt text eol=crlf
+kits/**/*.py -text
+kits/**/*.json -text

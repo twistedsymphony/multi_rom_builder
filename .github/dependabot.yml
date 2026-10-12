@@ -1,0 +1,7 @@
+# Opens a pull request whenever ts_rom_tool gets new commits, so builds pick up its updates.
+version: 2
+updates:
+  - package-ecosystem: gitsubmodule
+    directory: /
+    schedule:
+      interval: weekly

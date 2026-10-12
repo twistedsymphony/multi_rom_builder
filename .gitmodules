@@ -1,0 +1,3 @@
+[submodule "ts_rom_tool"]
+	path = ts_rom_tool
+	url = https://github.com/twistedsymphony/ts_rom_tool
