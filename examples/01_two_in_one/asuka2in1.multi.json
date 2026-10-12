@@ -1,0 +1,44 @@
+{
+  "_about": "Example 1: the smallest useful kit. Two unmodified games on one board, chosen with a single switch. See docs/KIT_GUIDE.md.",
+  "format": 1,
+  "name": "Asuka 2-in-1 (example)",
+  "board": "Taito Asuka & Asuka PCB (K1100388A)",
+  "description": "Example kit: Asuka & Asuka / Maze of Flott on one switch",
+  "selector": {"title": "Switch", "note": "OFF = Asuka & Asuka, ON = Maze of Flott"},
+  "outputs": [
+    {"id": "prg", "file": "prg.bin", "chip": "27C800", "slot_size": "512K", "fill": "FF"},
+    {"id": "fix", "file": "fix.bin", "chip": "27C800", "slot_size": "512K", "fill": "FF"},
+    {"id": "scn", "file": "scn.bin", "chip": "27C800", "slot_size": "512K", "fill": "FF"},
+    {"id": "obj", "file": "obj.bin", "chip": "27C800", "slot_size": "512K", "fill": "FF"},
+    {"id": "obj2", "file": "obj2.bin", "chip": "27C2048", "slot_size": "128K", "fill": "FF"},
+    {"id": "snd", "file": "snd.bin", "chip": "27C010", "slot_size": "64K", "fill": "FF"},
+    {"id": "msm", "file": "msm.bin", "chip": "27C010", "slot_size": "64K", "fill": "FF"}
+  ],
+  "slots": [
+    {"id": "off", "position": "OFF", "allow": ["asuka", "mofflott"], "default": "asuka"},
+    {"id": "on", "position": "ON", "allow": ["asuka", "mofflott"], "default": "mofflott"}
+  ],
+  "games": {
+    "asuka": {
+      "title": "Asuka & Asuka (World)",
+      "sets": ["asuka"],
+      "roms": {"b68-13.ic23": ["855efb3e", 131072], "b68-12.ic8": ["271eeee9", 131072], "b68-03.ic30": ["d3a59b10", 524288], "b68-01.ic3": ["89f32c94", 524288], "b68-02.ic6": ["f5018cd3", 524288], "b68-07.ic5": ["c113acc8", 65536], "b68-06.ic4": ["f517e64d", 65536], "b68-11.ic27": ["c378b508", 65536], "b68-10.ic24": ["387aaf40", 65536]},
+      "steps": [
+        ["ts", "-interleave", "rom:b68-13.ic23", "rom:b68-12.ic8", "prg.bin"],
+        ["ts", "-interleave", "rom:b68-07.ic5", "rom:b68-06.ic4", "obj2.bin"]
+      ],
+      "parts": {"prg": ["prg.bin", "prg.bin"], "fix": "rom:b68-03.ic30", "scn": "rom:b68-01.ic3", "obj": "rom:b68-02.ic6", "snd": "rom:b68-11.ic27", "obj2": "obj2.bin", "msm": "rom:b68-10.ic24"},
+      "_how": "The 68000 program is two 8-bit ROMs: -interleave joins them into one 16-bit image (256K). It is listed twice in prg because each slot of prg.bin is 512K: the A18 line is unused by this game, so both halves hold the same code."
+    },
+    "mofflott": {
+      "title": "Maze of Flott (Japan)",
+      "sets": ["mofflott"],
+      "roms": {"c17-09.bin": ["05ee110f", 131072], "c17-08.bin": ["d0aacffd", 131072], "c17-03.bin": ["27047fc3", 524288], "c17-01.bin": ["e9466d42", 524288], "c17-02.bin": ["8860a8db", 524288], "c17-05.bin": ["57ac4741", 65536], "c17-04.bin": ["f4250410", 65536], "c17-07.bin": ["cdb7bc2c", 65536], "c17-06.bin": ["5c332125", 65536]},
+      "steps": [
+        ["ts", "-interleave", "rom:c17-09.bin", "rom:c17-08.bin", "prg.bin"],
+        ["ts", "-interleave", "rom:c17-05.bin", "rom:c17-04.bin", "obj2.bin"]
+      ],
+      "parts": {"prg": ["prg.bin", "prg.bin"], "fix": "rom:c17-03.bin", "scn": "rom:c17-01.bin", "obj": "rom:c17-02.bin", "snd": "rom:c17-07.bin", "obj2": "obj2.bin", "msm": "rom:c17-06.bin"}
+    }
+  }
+}

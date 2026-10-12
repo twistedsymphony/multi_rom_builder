@@ -18,7 +18,7 @@ import importlib.util, contextlib, subprocess, time, datetime, argparse
 sys.dont_write_bytecode = True     # kit scripts and ts_rom_tool load from the kit folder; leave it clean
 
 APP_NAME = 'Multi Builder'
-APP_VERSION = '1.2'
+APP_VERSION = '1.3'
 FORMAT_VERSION = 1
 PROFILE_VERSION = 1
 
@@ -578,7 +578,10 @@ class Runner:
     def subst(self, s):
         return s.replace('{donor}', self.donor or '') if isinstance(s, str) else s
 
-    def resolve(self, arg, workdir, roms):
+    def resolve(self, arg, workdir, roms, path=True):
+        """rom:NAME and kit:PATH become full paths. Anything else is a work-folder file when path=True;
+        for ts/py/pyext steps (path=False) it is passed through unchanged, so sizes, offsets and flags
+        stay as written, and work-folder files still resolve because those steps run in the work folder."""
         if not isinstance(arg, str):
             return str(arg)
         arg = self.subst(arg)
@@ -592,20 +595,25 @@ class Runner:
             if not os.path.exists(p):
                 raise BuildError('kit file %s is missing' % arg[4:])
             return p
-        return os.path.join(workdir, arg)
+        return os.path.join(workdir, arg) if path else arg
 
     def run_step(self, step, workdir, roms):
         kind = step[0]
         if kind == 'ts':
-            cmd = [step[1]] + [self.resolve(a, workdir, roms) for a in step[2:]]
+            cmd = [step[1]] + [self.resolve(a, workdir, roms, path=False) for a in step[2:]]
             mod = self.ts_module()
-            code, text = self._capture(lambda: mod.main(['ts_rom_tool.py'] + cmd))
+            argv = [getattr(mod, '__file__', None) or 'ts_rom_tool.py'] + cmd
+
+            def go():
+                with self._in_dir(workdir, argv):
+                    mod.main(argv)
+            code, text = self._capture(go)
             self._log_text(text)
             if code or 'error' in text.lower():
                 raise BuildError('ts_rom_tool %s failed' % ' '.join(self.subst(x) for x in step[1:]))
         elif kind == 'py':
-            args = [self.resolve(a, workdir, roms) for a in step[1:]]
-            script = args[0]
+            args = [self.resolve(a, workdir, roms, path=False) for a in step[1:]]
+            script = os.path.join(workdir, args[0])
 
             def go():
                 with self._in_dir(workdir, [script] + args[1:]):
@@ -615,7 +623,8 @@ class Runner:
             if code:
                 raise BuildError('%s failed' % os.path.basename(script))
         elif kind == 'pyext':
-            args = [self.resolve(a, workdir, roms) for a in step[1:]]
+            args = [self.resolve(a, workdir, roms, path=False) for a in step[1:]]
+            args[0] = os.path.join(workdir, args[0])
             exe = python_executable()
             if not exe:
                 raise BuildError('this step needs a Python installation (py / python3) on the PATH')
@@ -769,7 +778,8 @@ def build(kit, roms_dir, out_dir, selection, log, donor=None, keep_work=False, p
             f.write('\nEPROM images:\n')
             for o, size, crc, sha in report:
                 f.write('  %-12s %-8s %10d bytes  CRC32 %s  SHA1 %s\n' % (o['file'], o.get('chip', ''), size, crc, sha))
-            f.write('\nTo repeat this build:  multibuilder --profile build_settings.json\n')
+            f.write('\nTo repeat this build:  MultiBuilder --profile build_settings.json\n'
+                    '                       (on Windows: MultiBuilderCLI.exe --profile build_settings.json)\n')
         written.append(rp)
         pp = os.path.join(out_dir, 'build_settings.json')
         save_profile(pp, make_profile(kit, donor, selection, os.path.abspath(roms_dir), os.path.abspath(out_dir)))

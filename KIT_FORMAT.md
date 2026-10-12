@@ -1,4 +1,6 @@
-# Multi Builder kit format (format 1, Multi Builder 1.1)
+# Multi Builder kit format (format 1, Multi Builder 1.3)
+
+This is the reference for every key. For a step-by-step walk-through with examples, see [docs/KIT_GUIDE.md](docs/KIT_GUIDE.md); ready-to-copy kits are in [examples/](examples).
 
 A kit is a folder holding one `<name>.multi.json` file plus any files its build steps use (IPS patches, scripts). ts_rom_tool is built into Multi Builder, so kits don't need to include it. Multi Builder loads the first `*.multi.json` it finds beside itself; **Open kit...** loads any other. Nothing in the tool is specific to one multi, so a new multi only needs a new kit folder.
 
@@ -27,7 +29,7 @@ Keys starting with `_` are ignored, so you can use them for comments (`"_note": 
 ```
 
 - Each image is the slots' data back to back, in slot order.
-- `slot_size` can be bytes, `"64K"`, `"4M"` or `"0x80000"`. If slots differ in size, use `"slot_sizes": [...]` with one entry per slot.
+- `slot_size` can be bytes, `"64K"`, `"4M"` or `"0x80000"`. Here `M` means megabytes; in ts_rom_tool commands `M` means megabits (`"1M"` = 128 KB), so prefer `K` in both. If slots differ in size, use `"slot_sizes": [...]` with one entry per slot.
 - `size` is optional. When present, the finished image must be exactly that size.
 - `fill` is the byte (hex) used for a slot whose game has no data for this image.
 - `chip` is shown in the log and the build report.
@@ -65,11 +67,11 @@ Keys starting with `_` are ignored, so you can use them for comments (`"_note": 
 - **`sets`**: MAME set names to search, clone first, then parent. A set can be a zip (`asuka.zip`) or a folder (`asuka/`) in the user's ROMs folder.
   - Files are matched by CRC32 and size, so split, merged (clones in sub-folders inside the parent zip) and non-merged sets all work.
   - If a file isn't in the listed sets, every zip in the ROMs folder is searched by CRC.
-- **`roms`**: every input file, as `name: [crc32, size]`. A file named right but with a different CRC is reported as "wrong version".
-- **`steps`**: run in order, in a private work folder for the game. Arguments are:
-  - `rom:NAME`: an input file from `roms`
-  - `kit:PATH`: a file inside the kit folder
-  - anything else: a file in the work folder
+- **`roms`**: every input file, as `name: [crc32, size]`. `tools/roms_json.py` writes this from `mame -listxml` output or from ROM zips. A file named right but with a different CRC is reported as "wrong version".
+- **`steps`**: run in order, in a private work folder for the game (which is the current folder while a step runs). Arguments are:
+  - `rom:NAME`: an input file from `roms`, passed as a full path
+  - `kit:PATH`: a file inside the kit folder, passed as a full path
+  - anything else: passed as written, so a plain file name is a file in the work folder and sizes, offsets and flags (`"128K"`, `"0x7000"`) stay as they are. In `fill` and `copy` steps, a plain name is always a work-folder file.
 - **`parts`**: for each output id, the file (or list of files, joined in order) that goes in the slot. The result must be exactly the slot size.
 - **`expect`** (optional): CRC32 a part must come out with. Use it for deterministic patched data, so a build with mismatched kit files fails instead of producing a bad EPROM.
 - **`python_modules`** (optional): modules a `py` step needs. The build stops with a clear message if they're unavailable.
@@ -112,7 +114,7 @@ A settings file records one user's choices:
 
 It comes from **Save settings...** in the window, `--save-profile` on the command line, or automatically as `build_settings.json` beside every build's output.
 
-**Load settings...** brings a file back into the window to edit. `multibuilder --profile FILE` repeats the build from the command line.
+**Load settings...** brings a file back into the window to edit. `MultiBuilder --profile FILE` (`MultiBuilderCLI.exe` on Windows) repeats the build from the command line.
 
 ```json
 {

@@ -1,0 +1,81 @@
+{
+  "_about": "Example 3: a made-up board and made-up games (the CRCs are not real) showing every advanced feature: donor PCBs, an inverted switch, per-donor outputs and patches, a script step, fill and pad steps. See docs/KIT_GUIDE.md.",
+  "format": 1,
+  "name": "Example Board 4-in-1 (template)",
+  "board": "Example Board, rev A or rev B",
+  "description": "Template kit with made-up games, for learning the format",
+  "selector": {"title": "Rotary switch", "order": "position", "note": "The switch is wired inverted: EPROM bank 01 is selected at position 2."},
+  "donors": [
+    {"id": "boardA", "title": "Example Board rev A (27C256 sound ROM)"},
+    {"id": "boardB", "title": "Example Board rev B (27C512 sound ROM)"}
+  ],
+  "donor_title": "Donor board",
+  "default_donor": "boardA",
+  "outputs": [
+    {"id": "prg", "file": "prg.bin", "chip": "27C020", "slot_size": "64K", "fill": "FF"},
+    {"id": "gfx", "file": "gfx.bin", "chip": "27C040", "slot_size": "128K", "fill": "FF"},
+    {"id": "snd_a", "file": "snd.bin", "chip": "27C010", "slot_size": "32K", "fill": "FF", "donors": ["boardA"]},
+    {"id": "snd_b", "file": "snd.bin", "chip": "27C020", "slot_size": "64K", "fill": "FF", "donors": ["boardB"]}
+  ],
+  "groups": {"shooter": ["exshoot", "exshootj"]},
+  "slots": [
+    {"id": "b00", "label": "00", "position": "0", "allow": ["@shooter"], "default": "exshoot"},
+    {"id": "b01", "label": "01", "position": "2", "allow": ["@shooter", "exracer"], "default": "exshootj"},
+    {"id": "b10", "label": "10", "position": "1", "allow": ["@shooter", "exracer", "expuzzle"], "default": "exracer"},
+    {"id": "b11", "label": "11", "position": "3", "allow": ["@shooter", "exracer", "expuzzle"], "default": "exracer", "default_by_donor": {"boardB": "expuzzle"}, "note": "Puzzle needs rev B"}
+  ],
+  "games": {
+    "exshoot": {
+      "title": "Example Shooter (World)",
+      "sets": ["exshoot"],
+      "roms": {"es1.p1": ["1e7ea419", 32768], "es2.p2": ["51c9bc70", 32768], "es.gfx": ["80a4df5a", 131072], "es.snd": ["f38b2ffc", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:es1.p1", "rom:es2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:es.gfx", "snd_a": "rom:es.snd", "snd_b": ["rom:es.snd", "rom:es.snd"]},
+      "_how": "snd_a or snd_b: only the output for the chosen donor board is built. On rev B the 32K sound data is listed twice to fill the 64K slot (the game ignores the extra address line)."
+    },
+    "exshootj": {
+      "title": "Example Shooter (Japan)",
+      "sets": ["exshootj", "exshoot"],
+      "roms": {"esj1.p1": ["8306d03b", 32768], "esj2.p2": ["a5aec797", 32768], "es.gfx": ["80a4df5a", 131072], "es.snd": ["f38b2ffc", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:esj1.p1", "rom:esj2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:es.gfx", "snd_a": "rom:es.snd", "snd_b": ["rom:es.snd", "rom:es.snd"]},
+      "_how": "A clone: sets lists the clone first, then its parent, because the graphics and sound files are only in the parent's zip (split sets)."
+    },
+    "exracer": {
+      "title": "Example Racer [patched]",
+      "sets": ["exracer"],
+      "roms": {"er.prg": ["dc28ff90", 32768], "er.tbl": ["f3f49249", 2048], "er.gfx": ["1a466884", 131072], "er.snd": ["e255accb", 32768]},
+      "steps": [
+        ["py", "kit:scripts/graft.py", "rom:er.tbl", "0", "0x800", "rom:er.prg", "0x7000", "prg_tbl.bin"],
+        ["ts", "-ipsapply", "kit:ips/{donor}/exracer.ips", "prg_tbl.bin", "prg_patched.bin"],
+        ["fill", "pad.bin", "32K", "FF"]
+      ],
+      "parts": {"prg": ["prg_patched.bin", "pad.bin"], "gfx": "rom:er.gfx", "snd_a": "rom:er.snd", "snd_b": ["rom:er.snd", "rom:er.snd"]},
+      "_how": "graft.py copies the 2K track table from er.tbl into the program at 0x7000, {donor} picks ips/boardA or ips/boardB, and the 32K program is padded with FF to the 64K slot.",
+      "donor_overrides": {
+        "boardB": {
+          "sets": ["exracerb", "exracer"],
+          "roms": {"er.prg": ["dc28ff90", 32768], "er.tbl": ["f3f49249", 2048], "er.gfx": ["1a466884", 131072], "erb.snd": ["39292d22", 65536]},
+          "parts": {"prg": ["prg_patched.bin", "pad.bin"], "gfx": "rom:er.gfx", "snd_b": "rom:erb.snd"},
+          "_how": "On rev B the kit uses the 64K sound ROM from the exracerb set instead. An override replaces the whole key, so roms and parts are given in full."
+        }
+      }
+    },
+    "expuzzle": {
+      "title": "Example Puzzle",
+      "donors": ["boardB"],
+      "sets": ["expuzzle"],
+      "roms": {"ep.p1": ["e5121482", 32768], "ep.p2": ["99dd251d", 32768], "ep.gfx": ["9f199504", 65536], "ep.snd": ["8e7aa6e9", 65536]},
+      "steps": [
+        ["ts", "-interleave", "rom:ep.p1", "rom:ep.p2", "prg.bin"],
+        ["ts", "-padf", "rom:ep.gfx", "128K", "gfx.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "gfx.bin", "snd_b": "rom:ep.snd"},
+      "_how": "donors: [boardB] hides this game unless rev B is chosen. It has no snd_a part, which is fine because snd_a is never built for rev B."
+    }
+  }
+}

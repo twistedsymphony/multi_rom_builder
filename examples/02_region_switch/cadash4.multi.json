@@ -1,0 +1,83 @@
+{
+  "_about": "Example 2: four regions of one ported game, each patched with IPS files at build time, plus a group and expected CRCs. See docs/KIT_GUIDE.md.",
+  "format": 1,
+  "name": "Cadash regions on Asuka (example)",
+  "board": "Taito Asuka & Asuka PCB (K1100388A), 68000 at 8 MHz",
+  "description": "Example kit: pick a Cadash region at each of 4 rotary switch positions",
+  "selector": {"title": "Rotary switch", "order": "position"},
+  "outputs": [
+    {"id": "prg1", "file": "prg1.bin", "chip": "27C160", "slot_size": "512K", "fill": "00"},
+    {"id": "fix1", "file": "fix1.bin", "chip": "27C160", "slot_size": "512K", "fill": "00"},
+    {"id": "scn1", "file": "scn1.bin", "chip": "27C160", "slot_size": "512K", "fill": "00"},
+    {"id": "obj1", "file": "obj1.bin", "chip": "27C160", "slot_size": "512K", "fill": "00"},
+    {"id": "snd1", "file": "snd1.bin", "chip": "27C020", "slot_size": "64K", "fill": "00"}
+  ],
+  "groups": {
+    "cadash": ["cadash", "cadashu", "cadashj", "cadashf"]
+  },
+  "slots": [
+    {"id": "0", "position": "0", "allow": ["@cadash"], "default": "cadash"},
+    {"id": "1", "position": "1", "allow": ["@cadash"], "default": "cadashu"},
+    {"id": "2", "position": "2", "allow": ["@cadash"], "default": "cadashj"},
+    {"id": "3", "position": "3", "allow": ["@cadash"], "default": "cadashf"}
+  ],
+  "games": {
+    "cadash": {
+      "_how": "Each region patches its own two program ROMs (ic11, ic15) with its own IPS files, then joins them. The same 512K program image goes into prg1 and fix1 because that is how the TASUKA-M8 multi's Cadash address map reads it. expect holds the CRC the patched prg1 data must have, so a wrong or outdated IPS stops the build.",
+      "title": "Cadash (World) [ported]",
+      "sets": ["cadash"],
+      "roms": {"c21_14.ic11": ["5daf13fb", 131072], "c21_16.ic15": ["cbaa2e75", 131072], "c21_13.ic10": ["6b9e0ee9", 131072], "c21_17.ic14": ["bf9a578a", 131072], "c21-02.9": ["205883b9", 524288], "c21-01.1": ["1ff6f39c", 524288], "c21-08.38": ["dca495a0", 65536]},
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadash_asuka_ic11.ips", "rom:c21_14.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadash_asuka_ic15.ips", "rom:c21_16.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_13.ic10", "rom:c21_17.ic14", "prg2.bin"]
+      ],
+      "parts": {"prg1": ["prg1.bin", "prg2.bin"], "fix1": ["prg1.bin", "prg2.bin"], "scn1": "rom:c21-02.9", "obj1": "rom:c21-01.1", "snd1": "rom:c21-08.38"},
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {"prg1": "1f071e7e"}
+    },
+    "cadashu": {
+      "title": "Cadash (US, rev 2) [ported]",
+      "sets": ["cadashu", "cadash"],
+      "roms": {"c21_14-2.ic11": ["f823d418", 131072], "c21_16-2.ic15": ["90165577", 131072], "c21_13-2.ic10": ["92dcc3ae", 131072], "c21_15-2.ic14": ["f915d26a", 131072], "c21-02.9": ["205883b9", 524288], "c21-01.1": ["1ff6f39c", 524288], "c21-08.38": ["dca495a0", 65536]},
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashu_asuka_ic11.ips", "rom:c21_14-2.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashu_asuka_ic15.ips", "rom:c21_16-2.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_13-2.ic10", "rom:c21_15-2.ic14", "prg2.bin"]
+      ],
+      "parts": {"prg1": ["prg1.bin", "prg2.bin"], "fix1": ["prg1.bin", "prg2.bin"], "scn1": "rom:c21-02.9", "obj1": "rom:c21-01.1", "snd1": "rom:c21-08.38"},
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {"prg1": "c4354a1b"}
+    },
+    "cadashj": {
+      "title": "Cadash (Japan, rev 2) [ported]",
+      "sets": ["cadashj", "cadash"],
+      "roms": {"c21_04-2.ic11": ["7a9c1828", 131072], "c21_06-2.ic15": ["c9d6440a", 131072], "c21_03-2.ic10": ["30afc320", 131072], "c21_05-2.ic14": ["2bc93209", 131072], "c21-02.9": ["205883b9", 524288], "c21-01.1": ["1ff6f39c", 524288], "c21-08.38": ["dca495a0", 65536]},
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashj_asuka_ic11.ips", "rom:c21_04-2.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashj_asuka_ic15.ips", "rom:c21_06-2.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_03-2.ic10", "rom:c21_05-2.ic14", "prg2.bin"]
+      ],
+      "parts": {"prg1": ["prg1.bin", "prg2.bin"], "fix1": ["prg1.bin", "prg2.bin"], "scn1": "rom:c21-02.9", "obj1": "rom:c21-01.1", "snd1": "rom:c21-08.38"},
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {"prg1": "ee36abcb"}
+    },
+    "cadashf": {
+      "title": "Cadash (France) [ported]",
+      "sets": ["cadashf", "cadash"],
+      "roms": {"c21_19.ic11": ["4d70543b", 131072], "c21_21.ic15": ["0e5b9950", 131072], "c21_18.ic10": ["8a19e59b", 131072], "c21_20.ic14": ["b96acfd9", 131072], "c21-02.9": ["205883b9", 524288], "c21-01.1": ["1ff6f39c", 524288], "c21-08.38": ["dca495a0", 65536]},
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashf_asuka_ic11.ips", "rom:c21_19.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashf_asuka_ic15.ips", "rom:c21_21.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_18.ic10", "rom:c21_20.ic14", "prg2.bin"]
+      ],
+      "parts": {"prg1": ["prg1.bin", "prg2.bin"], "fix1": ["prg1.bin", "prg2.bin"], "scn1": "rom:c21-02.9", "obj1": "rom:c21-01.1", "snd1": "rom:c21-08.38"},
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {"prg1": "550ae3dc"}
+    }
+  }
+}

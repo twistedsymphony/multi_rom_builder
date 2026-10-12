@@ -7,11 +7,18 @@ Builds the EPROM images for an arcade multi-game kit from your MAME ROM sets.
 - the kit configuration (`*.multi.json`)
 - the IPS patches and scripts its games need
 
+**Documentation:**
+- [User guide](docs/USER_GUIDE.md): every part of the window, what a build produces, settings files, the command line and troubleshooting.
+- [Making a kit](docs/KIT_GUIDE.md): a step-by-step guide to writing a kit for a new multi, with [example kits](examples) to copy.
+- [Kit format reference](KIT_FORMAT.md): every key in a `.multi.json` file.
+
 **Kit makers:**
-- Multi Builder is the same program for every multi; everything specific to one multi lives in its kit folder ([KIT_FORMAT.md](KIT_FORMAT.md)).
+- Multi Builder is the same program for every multi; everything specific to one multi lives in its kit folder.
 - [ts_rom_tool](https://github.com/twistedsymphony/ts_rom_tool) is built in, as a git submodule compiled into the program.
 
 ## Using it
+
+The [user guide](docs/USER_GUIDE.md) explains each part of the window in detail.
 
 1. Unzip the build tools and run Multi Builder. It loads the kit beside it.
 2. If the kit supports more than one donor PCB, choose yours from the drop-down at the top.

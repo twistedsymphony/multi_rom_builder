@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Self-test for Multi Builder: checks every kit in kits/ and runs a small end-to-end build with made-up ROMs.
+"""Self-test for Multi Builder: checks every kit in kits/ and examples/, runs a small end-to-end build with made-up
+ROMs, and builds every example kit for every donor PCB with made-up ROMs forged to the kit's CRCs.
 
   python tests/selftest.py                      test multibuilder.py from source
   python tests/selftest.py --program PATH       test a compiled program the same way
@@ -37,20 +38,27 @@ def kit_files_exist(kit):
     return sorted(set(missing))
 
 
+def kit_paths():
+    for top in ('kits', 'examples'):
+        for d in sorted(os.listdir(os.path.join(ROOT, top))):
+            if os.path.isdir(os.path.join(ROOT, top, d)):
+                for k in mb.find_kits(os.path.join(ROOT, top, d)):
+                    yield k
+
+
 def test_kits():
-    print('Kits in kits/')
-    for d in sorted(os.listdir(os.path.join(ROOT, 'kits'))):
-        for k in mb.find_kits(os.path.join(ROOT, 'kits', d)):
-            try:
-                kit = mb.Kit(k)
-            except mb.KitError as e:
-                check(False, '%s loads: %s' % (os.path.basename(k), e))
-                continue
-            check(True, '%s loads (%d slots, %d games)' % (kit.name, len(kit.slots), len(kit.games)))
-            m = kit_files_exist(kit)
-            check(not m, '%s: every kit: file exists%s' % (kit.name, (' (missing: %s)' % ', '.join(m[:5])) if m else ''))
-            for i in range(len(kit.slots)):
-                check(kit.default_for(i, kit.default_donor) is not None, '%s: %s %s has a default' % (kit.name, kit.selector, kit.position(i)))
+    print('Kits in kits/ and examples/')
+    for k in kit_paths():
+        try:
+            kit = mb.Kit(k)
+        except mb.KitError as e:
+            check(False, '%s loads: %s' % (os.path.basename(k), e))
+            continue
+        check(True, '%s loads (%d slots, %d games)' % (kit.name, len(kit.slots), len(kit.games)))
+        m = kit_files_exist(kit)
+        check(not m, '%s: every kit: file exists%s' % (kit.name, (' (missing: %s)' % ', '.join(m[:5])) if m else ''))
+        for i in range(len(kit.slots)):
+            check(kit.default_for(i, kit.default_donor) is not None, '%s: %s %s has a default' % (kit.name, kit.selector, kit.position(i)))
 
 
 def test_build(program):
@@ -128,11 +136,79 @@ def test_build(program):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def forge(size, crc, rnd):
+    """random data of SIZE bytes whose CRC32 is CRC (the last 4 bytes are solved for)"""
+    table = []
+    for i in range(256):
+        c = i
+        for _ in range(8):
+            c = (c >> 1) ^ 0xEDB88320 if c & 1 else c >> 1
+        table.append(c)
+    top = {t >> 24: i for i, t in enumerate(table)}
+    body = rnd.randbytes(size - 4)
+    reg = zlib.crc32(body) ^ 0xffffffff
+    f = int(crc, 16) ^ 0xffffffff
+    for _ in range(4):
+        j = top[f >> 24]
+        f = (((f ^ table[j]) << 8) & 0xffffffff) | j
+    data = body + (f ^ reg).to_bytes(4, 'little')
+    assert zlib.crc32(data) & 0xffffffff == int(crc, 16)
+    return data
+
+
+def test_examples(program):
+    print('Example kits, built with made-up ROMs forged to their CRCs')
+    cmd = [program] if program else [sys.executable, os.path.join(ROOT, 'multibuilder.py')]
+    rnd = random.Random(3)
+    for kp in [k for k in kit_paths() if os.sep + 'examples' + os.sep in k]:
+        kit = mb.Kit(kp)
+        tmp = tempfile.mkdtemp(prefix='mbex_')
+        try:
+            kitdir = os.path.join(tmp, 'kit')
+            shutil.copytree(os.path.dirname(kp), kitdir)
+            cfg = json.load(open(kp, encoding='utf-8'))
+            for g in cfg['games'].values():          # forged ROMs can't give the real patched CRCs
+                g.pop('expect', None)
+                for ov in g.get('donor_overrides', {}).values():
+                    ov.pop('expect', None)
+            kp2 = os.path.join(kitdir, os.path.basename(kp))
+            json.dump(cfg, open(kp2, 'w', encoding='utf-8'))
+            roms = os.path.join(tmp, 'roms'); os.makedirs(roms)
+            made = {}
+            for gid in kit.games:
+                for donor in kit.donor_ids() or [None]:
+                    g = kit.game(gid, donor)
+                    for name, (crc, size) in g['roms'].items():
+                        if crc not in made:
+                            made[crc] = forge(size, crc, rnd)
+                        with zipfile.ZipFile(os.path.join(roms, g['sets'][0] + '.zip'), 'a') as z:
+                            if name not in z.namelist():
+                                z.writestr(name, made[crc])
+            for donor in kit.donor_ids() or [None]:
+                # every game a slot can take for this donor, cycling so each game is built at least once
+                choices = [kit.allowed(s, donor) for s in kit.slots]
+                for r in range(max(len(c) for c in choices)):
+                    args = ['--kit', kp2, '--roms', roms, '--out', os.path.join(tmp, 'out')]
+                    if donor:
+                        args += ['--donor', donor]
+                    for i, c in enumerate(choices):
+                        args += ['--slot', 'id:%s=%s' % (kit.slots[i]['id'], c[r % len(c)])]
+                    p = subprocess.run(cmd + args, capture_output=True, text=True)
+                    what = '%s: build %d%s' % (kit.name, r + 1, (' for %s' % donor) if donor else '')
+                    check(p.returncode == 0, what)
+                    if p.returncode:
+                        print(p.stdout + p.stderr)
+                        break
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--program', help='compiled Multi Builder to test instead of multibuilder.py')
     a = ap.parse_args()
     test_kits()
     test_build(a.program and os.path.abspath(a.program))
+    test_examples(a.program and os.path.abspath(a.program))
     print('\n%d check(s) failed' % len(fails) if fails else '\nall checks passed')
     sys.exit(1 if fails else 0)
