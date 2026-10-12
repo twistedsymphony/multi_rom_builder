@@ -1,5 +1,6 @@
 {
   "_about": "Example 2: four regions of one ported game, each patched with IPS files at build time, plus a group and expected CRCs. See docs/KIT_GUIDE.md.",
+  "_external_files": "the ips/*.ips patches come from the TASUKA-M8 release package; copy its ips folder here to build",
   "format": 1,
   "name": "Cadash regions on Asuka (example)",
   "board": "Taito Asuka & Asuka PCB (K1100388A), 68000 at 8 MHz",

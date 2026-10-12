@@ -13,10 +13,10 @@ This guide walks through writing a kit from scratch. [KIT_FORMAT.md](../KIT_FORM
 | Example | Shows |
 |---|---|
 | [`01_two_in_one`](../examples/01_two_in_one/asuka2in1.multi.json) | The smallest useful kit: two unmodified games, an OFF/ON switch, ROMs joined and copied as they are. Real games: it builds from real MAME sets. |
-| [`02_region_switch`](../examples/02_region_switch/cadash4.multi.json) | Four regions of a ported game: IPS patches applied at build time, a group of games, `expect` CRCs, a rotary switch. Real games. |
+| [`02_region_switch`](../examples/02_region_switch/cadash4.multi.json) | Four regions of a ported game: IPS patches applied at build time, a group of games, `expect` CRCs, a rotary switch. Real games; its IPS patches come from the TASUKA-M8 release package and aren't in this repository. |
 | [`03_donors_and_scripts`](../examples/03_donors_and_scripts/example4in1.multi.json) | Every advanced feature: donor PCB choice, an inverted switch, outputs and patches that depend on the donor, a Python script step, `fill` and pad steps. Made-up board and games, for learning only. |
 
-The full TASUKA-M8 kit in [`kits/TASUKA-M8`](../kits/TASUKA-M8) is a real 8-position kit with 27 games.
+For a full-size real kit, [`reference/TASUKA-M8.multi.json`](reference/TASUKA-M8.multi.json) is the kit file of the TASUKA-M8 (an 8-position multi with 27 games), for reference. Its IPS patches and scripts are in the TASUKA-M8 release package, not in this repository.
 
 **Contents**
 1. [The kit folder](#1-the-kit-folder)
@@ -274,7 +274,7 @@ If the patches and the kit file ever get out of step, the build stops instead of
 3. Test that build in MAME or on hardware.
 4. Once it works, paste the real CRC in.
 
-Example 2 is a complete kit built this way.
+Example 2 is a kit built this way (its patch files come from the TASUKA-M8 release package).
 
 ## 8. Script steps
 
@@ -292,7 +292,7 @@ The rules for a `py` script:
 - To fail the build, use `raise SystemExit("what went wrong")` or `sys.exit(1)`. Anything it prints goes into the log.
 - It can import other `.py` files in its own folder.
 
-[`examples/03_donors_and_scripts/scripts/graft.py`](../examples/03_donors_and_scripts/scripts/graft.py) is a small, complete script. It copies a block of bytes from one ROM into another. That's useful for moving data (a table, a font, a protection chip's contents) from the builder's own ROMs into a patched program, so the kit never carries those bytes. The TASUKA-M8 kit's `scripts/bonze_asuka.py` is a large real one: it rebuilds Bonze Adventure's protection data and re-encodes its sound samples for a different sound chip.
+[`examples/03_donors_and_scripts/scripts/graft.py`](../examples/03_donors_and_scripts/scripts/graft.py) is a small, complete script. It copies a block of bytes from one ROM into another. That's useful for moving data (a table, a font, a protection chip's contents) from the builder's own ROMs into a patched program, so the kit never carries those bytes. The TASUKA-M8 release package's `scripts/bonze_asuka.py` is a large real one: it rebuilds Bonze Adventure's protection data and re-encodes its sound samples for a different sound chip.
 
 If a script really needs a package outside the standard library, use `"pyext"` instead of `"py"`. It runs the script with the builder's own Python installation (`py` or `python3` on their PATH). Builders then need Python and those packages, so avoid it when you can, and list the packages in `python_modules` so a missing one gives a clear message:
 
@@ -336,13 +336,17 @@ Example 3 uses every one of these.
 2. **Check the ROMs** against your own sets with `--check` or the window's ROMs column. A game showing "wrong version" usually means a CRC in the kit is wrong.
 3. **Build every game at least once.** Use `--slot` to put each game in a slot that allows it. Add `--keep-work` to keep each game's work folder, so you can inspect intermediate files.
 4. **Test the images.** Run them in MAME if your multi's board can be described there, then on hardware.
-5. **Run the self-test** if the kit is in this repository: `python tests/selftest.py`. It loads every kit under `kits/` and `examples/` and checks that every `kit:` file exists for every donor. For example kits, it also forges ROMs with the right CRCs and builds every game for every donor.
+5. **Run the self-test** from a clone of this repository with your kit folder copied into `kits/<NAME>/` (that folder is git-ignored, so your kit never gets committed here): `python tests/selftest.py`. It loads every kit under `kits/` and `examples/` and checks that every `kit:` file exists for every donor. For the example kits, it also forges ROMs with the right CRCs and builds every game for every donor.
 
 ## 11. Publish the kit
 
-Put the kit folder in this repository under `kits/<NAME>/` and push. The GitHub workflow builds Multi Builder for Windows, macOS and Linux and makes a `<NAME>_build_tools_<OS>.zip` for each OS, holding your kit and the program. Builders unzip it and run it, with nothing else to install. Pushing a version tag (`v1.3`) also attaches the zips to a GitHub release.
+Kits are published by their makers, not in this repository. To make a *build-tools* package your builders can just unzip and run:
 
-To hand a kit out yourself instead, zip the kit folder together with the program for each OS.
+1. Download `MultiBuilder_Windows.zip`, `MultiBuilder_macOS.zip` and `MultiBuilder_Linux.zip` from this repository's [releases](https://github.com/twistedsymphony/multi_rom_builder/releases).
+2. For each OS, put the program (Windows: `MultiBuilder.exe` and `MultiBuilderCLI.exe`; macOS: `MultiBuilder.app`; Linux: `MultiBuilder`) in a copy of your kit folder.
+3. Zip each one, for example `MYMULTI_build_tools_Windows.zip`.
+
+Builders unzip it and run it, with nothing else to install. Because the program is the same for every kit, you only need to repackage when you change the kit or want a newer Multi Builder.
 
 When you change a published kit, change the version in its `name`. Settings files record it, so builders can tell which kit version a build came from. Keep slot `id`s and game ids the same, so people's saved settings still load.
 

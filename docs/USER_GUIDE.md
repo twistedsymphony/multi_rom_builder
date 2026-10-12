@@ -2,7 +2,7 @@
 
 Multi Builder makes the EPROM images for an arcade multi-game kit from your own MAME ROM sets. You choose which game goes at each switch position, press **Build**, and burn the files it writes.
 
-Everything about a particular multi (its chips, its switch, which games fit where) comes from that multi's **kit**, so the window looks slightly different for each multi. This guide uses the TASUKA-M8 kit for the pictures.
+Everything about a particular multi (its chips, its switch, which games fit where) comes from that multi's **kit**, so the window looks slightly different for each multi. This guide uses the TASUKA-M8 kit for the pictures; its kit file is in [`reference/TASUKA-M8.multi.json`](reference/TASUKA-M8.multi.json) if you want to see how the window is driven by it.
 
 - [Getting started](#getting-started)
 - [The main window](#the-main-window)
@@ -14,7 +14,9 @@ Everything about a particular multi (its chips, its switch, which games fit wher
 
 ## Getting started
 
-1. Download the build-tools zip for your multi and your operating system, for example `TASUKA-M8_build_tools_Windows.zip`. Unzip it anywhere. The folder holds the program, the kit file (`*.multi.json`) and the kit's patches and scripts. Keep them together.
+1. Get the build-tools zip for your multi and your operating system from the multi's maker, for example `TASUKA-M8_build_tools_Windows.zip`. Unzip it anywhere. The folder holds the program, the kit file (`*.multi.json`) and the kit's patches and scripts. Keep them together.
+
+   If you have a kit folder without the program, download the program for your OS from the [Multi Builder releases](https://github.com/twistedsymphony/multi_rom_builder/releases) and put it in the kit folder.
 2. Start the program:
    - **Windows:** `MultiBuilder.exe`
    - **macOS:** `MultiBuilder.app`. The first time, right-click it and choose **Open**, because the app isn't signed.
@@ -161,9 +163,9 @@ The program exits with code 0 on success and non-zero on any failure, so scripts
 
 **"wrong version".** Your dump differs from the one in current MAME. Update that set from a current MAME ROM set. The log shows the name, CRC and location of each mismatched file.
 
-**"The *X* data came out with CRC ..., expected ...".** A patched game came out different from what the kit expects. This means the kit's patch files don't match the kit file, usually because files from two kit versions got mixed. Download the build tools for the kit again.
+**"The *X* data came out with CRC ..., expected ...".** A patched game came out different from what the kit expects. This means the kit's patch files don't match the kit file, usually because files from two kit versions got mixed. Download the build tools for the kit again from its maker.
 
-**"This kit needs a newer version of Multi Builder".** Download the latest build tools for the kit.
+**"This kit needs a newer version of Multi Builder".** Download the latest build tools for the kit, or the latest program from the [Multi Builder releases](https://github.com/twistedsymphony/multi_rom_builder/releases).
 
 **macOS says the app can't be opened.** Right-click (or Control-click) it, choose **Open**, and confirm. You only need to do this once.
 

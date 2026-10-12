@@ -2,10 +2,7 @@
 
 Builds the EPROM images for an arcade multi-game kit from your MAME ROM sets.
 
-**Users** get a *build-tools* zip for their multi:
-- the Multi Builder program
-- the kit configuration (`*.multi.json`)
-- the IPS patches and scripts its games need
+This repository holds the program only. Each multi's **kit** (its `*.multi.json` configuration plus any IPS patches and scripts its games need) is published separately by the multi's maker, usually as a *build-tools* zip that has the kit and the program together.
 
 **Documentation:**
 - [User guide](docs/USER_GUIDE.md): every part of the window, what a build produces, settings files, the command line and troubleshooting.
@@ -14,13 +11,14 @@ Builds the EPROM images for an arcade multi-game kit from your MAME ROM sets.
 
 **Kit makers:**
 - Multi Builder is the same program for every multi; everything specific to one multi lives in its kit folder.
+- Download the program for each OS from this repository's [releases](https://github.com/twistedsymphony/multi_rom_builder/releases) (or a workflow run's artifacts), put it beside your kit, and zip them up for your users.
 - [ts_rom_tool](https://github.com/twistedsymphony/ts_rom_tool) is built in, as a git submodule compiled into the program.
 
 ## Using it
 
 The [user guide](docs/USER_GUIDE.md) explains each part of the window in detail.
 
-1. Unzip the build tools and run Multi Builder. It loads the kit beside it.
+1. Unzip the build tools for your multi and run Multi Builder. It loads the kit beside it. (With the program on its own, use **Open kit...** to load a kit.)
 2. If the kit supports more than one donor PCB, choose yours from the drop-down at the top.
 3. **ROMs folder**: choose the folder holding your MAME ROM sets.
    - Zips and unzipped set folders both work.
@@ -67,8 +65,8 @@ Each operating system needs its own build, and every build works with every kit.
 
 - **GitHub:** every push to `main` runs the "Build Multi Builder" workflow on Windows, macOS and Linux.
   1. It runs `tests/selftest.py` against the source and the compiled program.
-  2. It produces one `<KIT>_build_tools_<OS>.zip` per kit folder (the kit plus the program), under the run's artifacts.
-  3. Pushing a tag such as `v1.2` also attaches those zips to a GitHub release.
+  2. It produces `MultiBuilder_<OS>.zip` (the program) under the run's artifacts.
+  3. Pushing a tag such as `v1.3` also attaches those zips to a GitHub release.
 - **Locally:** `build.bat` (Windows) or `./build.sh` (Linux / macOS). The program lands in `dist/`.
 - **macOS:** the build is unsigned, so the first launch needs right-click > Open.
 
@@ -91,10 +89,12 @@ git add ts_rom_tool && git commit -m "Update ts_rom_tool"
 |---|---|
 | `multibuilder.py` | the program (GUI and command line) |
 | `ts_rom_tool/` | submodule: twistedsymphony/ts_rom_tool |
-| `kits/<name>/` | one folder per multi; each becomes a build-tools zip |
-| `tests/selftest.py` | kit checks and an end-to-end build with made-up ROMs |
+| `docs/` | user guide, kit-making guide, and the TASUKA-M8 kit file as a reference |
+| `examples/` | example kits to learn from and copy |
+| `tools/roms_json.py` | writes a game's ROM list from `mame -listxml` output or ROM zips |
+| `tests/selftest.py` | kit checks, an end-to-end build, and builds of every example kit with made-up ROMs |
 | `MultiBuilder.spec` | PyInstaller build definition |
-| `KIT_FORMAT.md` | how to write a kit |
+| `KIT_FORMAT.md` | kit format reference |
 
 ## License
 

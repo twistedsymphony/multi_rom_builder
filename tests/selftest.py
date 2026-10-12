@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-test for Multi Builder: checks every kit in kits/ and examples/, runs a small end-to-end build with made-up
+"""Self-test for Multi Builder: checks every kit in examples/ (and in a local kits/ folder, if you keep one), runs a small end-to-end build with made-up
 ROMs, and builds every example kit for every donor PCB with made-up ROMs forged to the kit's CRCs.
 
   python tests/selftest.py                      test multibuilder.py from source
@@ -40,6 +40,8 @@ def kit_files_exist(kit):
 
 def kit_paths():
     for top in ('kits', 'examples'):
+        if not os.path.isdir(os.path.join(ROOT, top)):
+            continue
         for d in sorted(os.listdir(os.path.join(ROOT, top))):
             if os.path.isdir(os.path.join(ROOT, top, d)):
                 for k in mb.find_kits(os.path.join(ROOT, top, d)):
@@ -47,7 +49,7 @@ def kit_paths():
 
 
 def test_kits():
-    print('Kits in kits/ and examples/')
+    print('Kits in examples/ (and kits/)')
     for k in kit_paths():
         try:
             kit = mb.Kit(k)
@@ -56,7 +58,11 @@ def test_kits():
             continue
         check(True, '%s loads (%d slots, %d games)' % (kit.name, len(kit.slots), len(kit.games)))
         m = kit_files_exist(kit)
-        check(not m, '%s: every kit: file exists%s' % (kit.name, (' (missing: %s)' % ', '.join(m[:5])) if m else ''))
+        if kit.cfg.get('_external_files'):
+            # a reference kit whose patches live in a release package, not in this repository
+            print('  note  %s: %d kit files not included (%s)' % (kit.name, len(m), kit.cfg['_external_files']))
+        else:
+            check(not m, '%s: every kit: file exists%s' % (kit.name, (' (missing: %s)' % ', '.join(m[:5])) if m else ''))
         for i in range(len(kit.slots)):
             check(kit.default_for(i, kit.default_donor) is not None, '%s: %s %s has a default' % (kit.name, kit.selector, kit.position(i)))
 
@@ -171,6 +177,11 @@ def test_examples(program):
                 g.pop('expect', None)
                 for ov in g.get('donor_overrides', {}).values():
                     ov.pop('expect', None)
+            for rel in kit_files_exist(kit):              # stand-ins for patches not kept in the repository
+                p = os.path.join(kitdir, rel.split(': ', 1)[1])
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                with open(p, 'wb') as f:
+                    f.write(b'PATCHEOF' if p.lower().endswith('.ips') else b'')
             kp2 = os.path.join(kitdir, os.path.basename(kp))
             json.dump(cfg, open(kp2, 'w', encoding='utf-8'))
             roms = os.path.join(tmp, 'roms'); os.makedirs(roms)

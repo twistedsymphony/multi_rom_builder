@@ -1,0 +1,946 @@
+{
+  "format": 1,
+  "name": "TASUKA-M8 v1.1",
+  "board": "Taito Asuka & Asuka PCB (K1100388A)",
+  "description": "8-game multi; U2 rev 1.3, 68000 clock switch depopulated (8 MHz).",
+  "selector": {
+    "title": "Rotary switch",
+    "order": "position"
+  },
+  "outputs": [
+    {
+      "id": "prg1",
+      "file": "prg1.bin",
+      "chip": "27C322",
+      "slot_size": "512K",
+      "fill": "00"
+    },
+    {
+      "id": "fix1",
+      "file": "fix1.bin",
+      "chip": "27C322",
+      "slot_size": "512K",
+      "fill": "00"
+    },
+    {
+      "id": "scn1",
+      "file": "scn1.bin",
+      "chip": "27C322",
+      "slot_size": "512K",
+      "fill": "00"
+    },
+    {
+      "id": "obj1",
+      "file": "obj1.bin",
+      "chip": "27C322",
+      "slot_size": "512K",
+      "fill": "00"
+    },
+    {
+      "id": "obj2",
+      "file": "obj2.bin",
+      "chip": "27C800",
+      "slot_size": "128K",
+      "fill": "00"
+    },
+    {
+      "id": "snd1",
+      "file": "snd1.bin",
+      "chip": "27C040",
+      "slot_size": "64K",
+      "fill": "00"
+    },
+    {
+      "id": "msm1",
+      "file": "msm1.bin",
+      "chip": "27C040",
+      "slot_size": "64K",
+      "fill": "00"
+    }
+  ],
+  "groups": {
+    "asu_map": ["asuka", "asukaj", "asukaja", "earthjkr", "earthjkra", "earthjkrb", "earthjkrp", "galmedes", "mofflott", "bonzeadv", "bonzeadvo", "bonzeadvu", "jigkmgri", "jigkmgria"],
+    "eto_map": ["eto", "etoa"],
+    "cad_map": ["cadash", "cadashf", "cadashg", "cadashgo", "cadashi", "cadashj", "cadashj1", "cadashjo", "cadashs", "cadashu", "cadashu1"]
+  },
+  "slots": [
+    {
+      "id": "0",
+      "position": "0",
+      "label": "000",
+      "allow": ["@asu_map"],
+      "default": "asuka",
+      "note": "Asuka map"
+    },
+    {
+      "id": "1",
+      "position": "1",
+      "label": "001",
+      "allow": ["@asu_map"],
+      "default": "earthjkr",
+      "note": "Asuka map"
+    },
+    {
+      "id": "2",
+      "position": "2",
+      "label": "010",
+      "allow": ["@asu_map"],
+      "default": "galmedes",
+      "note": "Asuka map"
+    },
+    {
+      "id": "3",
+      "position": "3",
+      "label": "011",
+      "allow": ["@eto_map"],
+      "default": "eto",
+      "note": "Eto map"
+    },
+    {
+      "id": "4",
+      "position": "4",
+      "label": "100",
+      "allow": ["@asu_map"],
+      "default": "bonzeadv",
+      "note": "Asuka map"
+    },
+    {
+      "id": "5",
+      "position": "5",
+      "label": "101",
+      "allow": ["@asu_map"],
+      "default": "earthjkrp",
+      "note": "Asuka map"
+    },
+    {
+      "id": "6",
+      "position": "6",
+      "label": "110",
+      "allow": ["@asu_map"],
+      "default": "mofflott",
+      "note": "Asuka map"
+    },
+    {
+      "id": "7",
+      "position": "7",
+      "label": "111",
+      "allow": ["@cad_map"],
+      "default": "cadash",
+      "note": "Cadash map"
+    }
+  ],
+  "games": {
+    "asuka": {
+      "title": "Asuka & Asuka (World)",
+      "sets": ["asuka"],
+      "roms": {
+        "b68-13.ic23": ["855efb3e", 131072],
+        "b68-12.ic8": ["271eeee9", 131072],
+        "b68-03.ic30": ["d3a59b10", 524288],
+        "b68-01.ic3": ["89f32c94", 524288],
+        "b68-02.ic6": ["f5018cd3", 524288],
+        "b68-07.ic5": ["c113acc8", 65536],
+        "b68-06.ic4": ["f517e64d", 65536],
+        "b68-11.ic27": ["c378b508", 65536],
+        "b68-10.ic24": ["387aaf40", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:b68-13.ic23", "rom:b68-12.ic8", "prg.bin"],
+        ["ts", "-interleave", "rom:b68-07.ic5", "rom:b68-06.ic4", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:b68-03.ic30",
+        "scn1": "rom:b68-01.ic3",
+        "obj1": "rom:b68-02.ic6",
+        "snd1": "rom:b68-11.ic27",
+        "obj2": "obj2.bin",
+        "msm1": "rom:b68-10.ic24"
+      }
+    },
+    "asukaj": {
+      "title": "Asuka & Asuka (Japan, rev 1)",
+      "sets": ["asukaj", "asuka"],
+      "roms": {
+        "b68-09-1.ic23": ["d61be555", 131072],
+        "b68-08-1.ic8": ["e916f17b", 131072],
+        "b68-03.ic30": ["d3a59b10", 524288],
+        "b68-01.ic3": ["89f32c94", 524288],
+        "b68-02.ic6": ["f5018cd3", 524288],
+        "b68-07.ic5": ["c113acc8", 65536],
+        "b68-06.ic4": ["f517e64d", 65536],
+        "b68-11.ic27": ["c378b508", 65536],
+        "b68-10.ic24": ["387aaf40", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:b68-09-1.ic23", "rom:b68-08-1.ic8", "prg.bin"],
+        ["ts", "-interleave", "rom:b68-07.ic5", "rom:b68-06.ic4", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:b68-03.ic30",
+        "scn1": "rom:b68-01.ic3",
+        "obj1": "rom:b68-02.ic6",
+        "snd1": "rom:b68-11.ic27",
+        "obj2": "obj2.bin",
+        "msm1": "rom:b68-10.ic24"
+      }
+    },
+    "asukaja": {
+      "title": "Asuka & Asuka (Japan)",
+      "sets": ["asukaja", "asuka"],
+      "roms": {
+        "b68-09.ic23": ["1eaa1bbb", 131072],
+        "b68-08.ic8": ["8cc96e60", 131072],
+        "b68-03.ic30": ["d3a59b10", 524288],
+        "b68-01.ic3": ["89f32c94", 524288],
+        "b68-02.ic6": ["f5018cd3", 524288],
+        "b68-07.ic5": ["c113acc8", 65536],
+        "b68-06.ic4": ["f517e64d", 65536],
+        "b68-11.ic27": ["c378b508", 65536],
+        "b68-10.ic24": ["387aaf40", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:b68-09.ic23", "rom:b68-08.ic8", "prg.bin"],
+        ["ts", "-interleave", "rom:b68-07.ic5", "rom:b68-06.ic4", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:b68-03.ic30",
+        "scn1": "rom:b68-01.ic3",
+        "obj1": "rom:b68-02.ic6",
+        "snd1": "rom:b68-11.ic27",
+        "obj2": "obj2.bin",
+        "msm1": "rom:b68-10.ic24"
+      }
+    },
+    "earthjkr": {
+      "title": "U.N. Defense Force: Earth Joker (US / Japan, set 1)",
+      "sets": ["earthjkr"],
+      "roms": {
+        "ej_3b.ic23": ["bdd86fc2", 131072],
+        "ej_3a.ic8": ["9c8050c6", 131072],
+        "ej_30e.ic30": ["49d1f77f", 524288],
+        "ej_chr-0.ic3": ["ac675297", 524288],
+        "ej_obj-0.ic6": ["5f21ac47", 524288],
+        "ej_1.ic5": ["cb4891db", 65536],
+        "ej_0.ic4": ["b612086f", 65536],
+        "ej_2.ic27": ["42ba2566", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:ej_3b.ic23", "rom:ej_3a.ic8", "prg.bin"],
+        ["ts", "-interleave", "rom:ej_1.ic5", "rom:ej_0.ic4", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:ej_30e.ic30",
+        "scn1": "rom:ej_chr-0.ic3",
+        "obj1": "rom:ej_obj-0.ic6",
+        "snd1": "rom:ej_2.ic27",
+        "obj2": "obj2.bin"
+      }
+    },
+    "earthjkra": {
+      "title": "U.N. Defense Force: Earth Joker (US / Japan, set 2)",
+      "sets": ["earthjkra", "earthjkr"],
+      "roms": {
+        "ejok_ic23": ["cbd29731", 131072],
+        "ejok_ic8": ["cfd4953c", 131072],
+        "ejok_ic30": ["49d1f77f", 524288],
+        "ej_chr-0.ic3": ["ac675297", 524288],
+        "ej_obj-0.ic6": ["5f21ac47", 524288],
+        "ejok_ic5": ["cb4891db", 65536],
+        "ejok_ic4": ["b612086f", 65536],
+        "ejok_ic28": ["42ba2566", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:ejok_ic23", "rom:ejok_ic8", "prg.bin"],
+        ["ts", "-interleave", "rom:ejok_ic5", "rom:ejok_ic4", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:ejok_ic30",
+        "scn1": "rom:ej_chr-0.ic3",
+        "obj1": "rom:ej_obj-0.ic6",
+        "snd1": "rom:ejok_ic28",
+        "obj2": "obj2.bin"
+      }
+    },
+    "earthjkrb": {
+      "title": "U.N. Defense Force: Earth Joker (US / Japan, set 3)",
+      "sets": ["earthjkrb", "earthjkr"],
+      "roms": {
+        "4.ic23": ["250f09f8", 131072],
+        "3.ic8": ["88fc1c5d", 131072],
+        "ic30e.ic30": ["49d1f77f", 524288],
+        "ej_chr-0.ic3": ["ac675297", 524288],
+        "ej_obj-0.ic6": ["5f21ac47", 524288],
+        "1.ic5": ["cb4891db", 65536],
+        "0.ic4": ["b612086f", 65536],
+        "2.ic27": ["42ba2566", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:4.ic23", "rom:3.ic8", "prg.bin"],
+        ["ts", "-interleave", "rom:1.ic5", "rom:0.ic4", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:ic30e.ic30",
+        "scn1": "rom:ej_chr-0.ic3",
+        "obj1": "rom:ej_obj-0.ic6",
+        "snd1": "rom:2.ic27",
+        "obj2": "obj2.bin"
+      }
+    },
+    "earthjkrp": {
+      "title": "U.N. Defense Force: Earth Joker (Japan, prototype?)",
+      "sets": ["earthjkrp", "earthjkr"],
+      "roms": {
+        "3.ic23": ["26c33225", 131072],
+        "4.ic8": ["e9b1ef0c", 131072],
+        "5.ic30": ["bf760b2d", 524288],
+        "ej_chr-0.ic3": ["ac675297", 524288],
+        "ej_obj-0.ic6": ["5f21ac47", 524288],
+        "1.ic5": ["cb4891db", 65536],
+        "0.ic4": ["b612086f", 65536],
+        "2.ic27": ["42ba2566", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:4.ic8", "rom:3.ic23", "prg.bin"],
+        ["ts", "-interleave", "rom:1.ic5", "rom:0.ic4", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:5.ic30",
+        "scn1": "rom:ej_chr-0.ic3",
+        "obj1": "rom:ej_obj-0.ic6",
+        "snd1": "rom:2.ic27",
+        "obj2": "obj2.bin"
+      }
+    },
+    "galmedes": {
+      "title": "Galmedes (Japan)",
+      "sets": ["galmedes"],
+      "roms": {
+        "gm-prg1.ic23": ["32a70753", 131072],
+        "gm-prg0.ic8": ["fae546a4", 131072],
+        "gm-30.ic30": ["4da2a407", 524288],
+        "gm-scn.ic3": ["3bab0581", 524288],
+        "gm-obj.ic6": ["7a4a1315", 524288],
+        "gm-snd.ic27": ["d6f56c21", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:gm-prg1.ic23", "rom:gm-prg0.ic8", "prg.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:gm-30.ic30",
+        "scn1": "rom:gm-scn.ic3",
+        "obj1": "rom:gm-obj.ic6",
+        "snd1": "rom:gm-snd.ic27"
+      }
+    },
+    "mofflott": {
+      "title": "Maze of Flott (Japan)",
+      "sets": ["mofflott"],
+      "roms": {
+        "c17-09.bin": ["05ee110f", 131072],
+        "c17-08.bin": ["d0aacffd", 131072],
+        "c17-03.bin": ["27047fc3", 524288],
+        "c17-01.bin": ["e9466d42", 524288],
+        "c17-02.bin": ["8860a8db", 524288],
+        "c17-05.bin": ["57ac4741", 65536],
+        "c17-04.bin": ["f4250410", 65536],
+        "c17-07.bin": ["cdb7bc2c", 65536],
+        "c17-06.bin": ["5c332125", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:c17-09.bin", "rom:c17-08.bin", "prg.bin"],
+        ["ts", "-interleave", "rom:c17-05.bin", "rom:c17-04.bin", "obj2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:c17-03.bin",
+        "scn1": "rom:c17-01.bin",
+        "obj1": "rom:c17-02.bin",
+        "snd1": "rom:c17-07.bin",
+        "obj2": "obj2.bin",
+        "msm1": "rom:c17-06.bin"
+      }
+    },
+    "eto": {
+      "title": "Kokontouzai Eto Monogatari (Japan)",
+      "sets": ["eto"],
+      "roms": {
+        "eto-1.ic23": ["44286597", 131072],
+        "eto-0.ic8": ["57b79370", 131072],
+        "eto-2.ic30": ["12f46fb5", 524288],
+        "eto-4.ic3": ["a8768939", 524288],
+        "eto-3.ic6": ["dd247397", 524288],
+        "eto-5.ic27": ["b3689da0", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:eto-1.ic23", "rom:eto-0.ic8", "prg.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:eto-2.ic30",
+        "scn1": "rom:eto-4.ic3",
+        "obj1": "rom:eto-3.ic6",
+        "snd1": "rom:eto-5.ic27"
+      }
+    },
+    "etoa": {
+      "title": "Kokontouzai Eto Monogatari (Japan, prototype?)",
+      "sets": ["etoa", "eto"],
+      "roms": {
+        "pe.ic23": ["36a6a742", 131072],
+        "po.ic8": ["bc86f328", 131072],
+        "pd.ic30": ["39e6a0f3", 524288],
+        "sc.ic3": ["a8768939", 524288],
+        "ob.ic6": ["dd247397", 524288],
+        "sd.ic27": ["b3689da0", 65536]
+      },
+      "steps": [
+        ["ts", "-interleave", "rom:pe.ic23", "rom:po.ic8", "prg.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "rom:pd.ic30",
+        "scn1": "rom:sc.ic3",
+        "obj1": "rom:ob.ic6",
+        "snd1": "rom:sd.ic27"
+      }
+    },
+    "bonzeadv": {
+      "title": "Bonze Adventure (World, rev 1) [ported]",
+      "sets": ["bonzeadv"],
+      "roms": {
+        "b41-09-1.17": ["af821fbc", 65536],
+        "b41-11-1.26": ["823fff00", 65536],
+        "b41-10.16": ["4ca94d77", 65536],
+        "b41-15.25": ["aed7a0d0", 65536],
+        "b41-01.15": ["5d072fa4", 524288],
+        "cchip_b41-05.43": ["75c52553", 8192],
+        "b41-03.1": ["736d35d0", 524288],
+        "b41-02.7": ["29f205d9", 524288],
+        "b41-13.20": ["9e464254", 65536],
+        "b41-04.48": ["c668638f", 524288]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic17.ips", "rom:b41-09-1.17", "ic17.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic26.ips", "rom:b41-11-1.26", "ic26.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic16.ips", "rom:b41-10.16", "ic16.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic25.ips", "rom:b41-15.25", "ic25.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic20.ips", "rom:b41-13.20", "ic20.bin"],
+        ["py", "kit:scripts/bonze_asuka.py", "rom:cchip_b41-05.43", "rom:b41-04.48", "ic17.bin", "ic26.bin", "ic20.bin", "msm.bin"],
+        ["ts", "-interleave", "ic17.bin", "ic26.bin", "prg_lo.bin"],
+        ["ts", "-interleave", "ic16.bin", "ic25.bin", "prg_hi.bin"],
+        ["ts", "-concat", "prg_lo.bin", "prg_hi.bin", "prg.bin"],
+        ["ts", "-byteswap", "rom:b41-01.15", "fix.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "fix.bin",
+        "scn1": "rom:b41-03.1",
+        "obj1": "rom:b41-02.7",
+        "snd1": "ic20.bin",
+        "msm1": "msm.bin"
+      },
+      "notes": "C-Chip replaced in 68000 code; YM2610 sound translated to the YM2151 + MSM5205.",
+      "expect": {
+        "prg1": "b9cba337"
+      }
+    },
+    "bonzeadvo": {
+      "title": "Bonze Adventure (World) [ported]",
+      "sets": ["bonzeadvo", "bonzeadv"],
+      "roms": {
+        "b41-09.17": ["06818710", 65536],
+        "b41-11.26": ["33c4c2f4", 65536],
+        "b41-10.16": ["4ca94d77", 65536],
+        "b41-15.25": ["aed7a0d0", 65536],
+        "b41-01.15": ["5d072fa4", 524288],
+        "cchip_b41-05.43": ["75c52553", 8192],
+        "b41-03.1": ["736d35d0", 524288],
+        "b41-02.7": ["29f205d9", 524288],
+        "b41-13.20": ["9e464254", 65536],
+        "b41-04.48": ["c668638f", 524288]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/bonzeadvo_asuka_ic17.ips", "rom:b41-09.17", "ic17.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadvo_asuka_ic26.ips", "rom:b41-11.26", "ic26.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadvo_asuka_ic16.ips", "rom:b41-10.16", "ic16.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadvo_asuka_ic25.ips", "rom:b41-15.25", "ic25.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic20.ips", "rom:b41-13.20", "ic20.bin"],
+        ["py", "kit:scripts/bonze_asuka.py", "rom:cchip_b41-05.43", "rom:b41-04.48", "ic17.bin", "ic26.bin", "ic20.bin", "msm.bin"],
+        ["ts", "-interleave", "ic17.bin", "ic26.bin", "prg_lo.bin"],
+        ["ts", "-interleave", "ic16.bin", "ic25.bin", "prg_hi.bin"],
+        ["ts", "-concat", "prg_lo.bin", "prg_hi.bin", "prg.bin"],
+        ["ts", "-byteswap", "rom:b41-01.15", "fix.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "fix.bin",
+        "scn1": "rom:b41-03.1",
+        "obj1": "rom:b41-02.7",
+        "snd1": "ic20.bin",
+        "msm1": "msm.bin"
+      },
+      "notes": "C-Chip replaced in 68000 code; YM2610 sound translated to the YM2151 + MSM5205.",
+      "expect": {
+        "prg1": "ffba44df"
+      }
+    },
+    "bonzeadvu": {
+      "title": "Bonze Adventure (US, rev 1) [ported]",
+      "sets": ["bonzeadvu", "bonzeadv"],
+      "roms": {
+        "b41-09-1.17": ["af821fbc", 65536],
+        "b41-11-1.26": ["823fff00", 65536],
+        "b41-10.16": ["4ca94d77", 65536],
+        "b41-14.25": ["37def16a", 65536],
+        "b41-01.15": ["5d072fa4", 524288],
+        "cchip_b41-05.43": ["75c52553", 8192],
+        "b41-03.1": ["736d35d0", 524288],
+        "b41-02.7": ["29f205d9", 524288],
+        "b41-13.20": ["9e464254", 65536],
+        "b41-04.48": ["c668638f", 524288]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/bonzeadvu_asuka_ic17.ips", "rom:b41-09-1.17", "ic17.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadvu_asuka_ic26.ips", "rom:b41-11-1.26", "ic26.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadvu_asuka_ic16.ips", "rom:b41-10.16", "ic16.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadvu_asuka_ic25.ips", "rom:b41-14.25", "ic25.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic20.ips", "rom:b41-13.20", "ic20.bin"],
+        ["py", "kit:scripts/bonze_asuka.py", "rom:cchip_b41-05.43", "rom:b41-04.48", "ic17.bin", "ic26.bin", "ic20.bin", "msm.bin"],
+        ["ts", "-interleave", "ic17.bin", "ic26.bin", "prg_lo.bin"],
+        ["ts", "-interleave", "ic16.bin", "ic25.bin", "prg_hi.bin"],
+        ["ts", "-concat", "prg_lo.bin", "prg_hi.bin", "prg.bin"],
+        ["ts", "-byteswap", "rom:b41-01.15", "fix.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "fix.bin",
+        "scn1": "rom:b41-03.1",
+        "obj1": "rom:b41-02.7",
+        "snd1": "ic20.bin",
+        "msm1": "msm.bin"
+      },
+      "notes": "C-Chip replaced in 68000 code; YM2610 sound translated to the YM2151 + MSM5205.",
+      "expect": {
+        "prg1": "701deb99"
+      }
+    },
+    "jigkmgri": {
+      "title": "Jigoku Meguri (Japan, rev 1) [ported]",
+      "sets": ["jigkmgri", "bonzeadv"],
+      "roms": {
+        "b41-09-1.17": ["af821fbc", 65536],
+        "b41-11-1.26": ["823fff00", 65536],
+        "b41-10.16": ["4ca94d77", 65536],
+        "b41-12.25": ["40d9c1fc", 65536],
+        "b41-01.15": ["5d072fa4", 524288],
+        "cchip_b41-05.43": ["75c52553", 8192],
+        "b41-03.1": ["736d35d0", 524288],
+        "b41-02.7": ["29f205d9", 524288],
+        "b41-13.20": ["9e464254", 65536],
+        "b41-04.48": ["c668638f", 524288]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/jigkmgri_asuka_ic17.ips", "rom:b41-09-1.17", "ic17.bin"],
+        ["ts", "-ipsapply", "kit:ips/jigkmgri_asuka_ic26.ips", "rom:b41-11-1.26", "ic26.bin"],
+        ["ts", "-ipsapply", "kit:ips/jigkmgri_asuka_ic16.ips", "rom:b41-10.16", "ic16.bin"],
+        ["ts", "-ipsapply", "kit:ips/jigkmgri_asuka_ic25.ips", "rom:b41-12.25", "ic25.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic20.ips", "rom:b41-13.20", "ic20.bin"],
+        ["py", "kit:scripts/bonze_asuka.py", "rom:cchip_b41-05.43", "rom:b41-04.48", "ic17.bin", "ic26.bin", "ic20.bin", "msm.bin"],
+        ["ts", "-interleave", "ic17.bin", "ic26.bin", "prg_lo.bin"],
+        ["ts", "-interleave", "ic16.bin", "ic25.bin", "prg_hi.bin"],
+        ["ts", "-concat", "prg_lo.bin", "prg_hi.bin", "prg.bin"],
+        ["ts", "-byteswap", "rom:b41-01.15", "fix.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "fix.bin",
+        "scn1": "rom:b41-03.1",
+        "obj1": "rom:b41-02.7",
+        "snd1": "ic20.bin",
+        "msm1": "msm.bin"
+      },
+      "notes": "C-Chip replaced in 68000 code; YM2610 sound translated to the YM2151 + MSM5205.",
+      "expect": {
+        "prg1": "37502c03"
+      }
+    },
+    "jigkmgria": {
+      "title": "Jigoku Meguri (Japan) [ported]",
+      "sets": ["jigkmgria", "bonzeadv"],
+      "roms": {
+        "b41-09.17": ["06818710", 65536],
+        "b41-11.26": ["33c4c2f4", 65536],
+        "b41-10.16": ["4ca94d77", 65536],
+        "b41-12.25": ["40d9c1fc", 65536],
+        "b41-01.15": ["5d072fa4", 524288],
+        "cchip_b41-05.43": ["75c52553", 8192],
+        "b41-03.1": ["736d35d0", 524288],
+        "b41-02.7": ["29f205d9", 524288],
+        "b41-13.20": ["9e464254", 65536],
+        "b41-04.48": ["c668638f", 524288]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/bonzeadvo_asuka_ic17.ips", "rom:b41-09.17", "ic17.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadvo_asuka_ic26.ips", "rom:b41-11.26", "ic26.bin"],
+        ["ts", "-ipsapply", "kit:ips/jigkmgri_asuka_ic16.ips", "rom:b41-10.16", "ic16.bin"],
+        ["ts", "-ipsapply", "kit:ips/jigkmgri_asuka_ic25.ips", "rom:b41-12.25", "ic25.bin"],
+        ["ts", "-ipsapply", "kit:ips/bonzeadv_asuka_ic20.ips", "rom:b41-13.20", "ic20.bin"],
+        ["py", "kit:scripts/bonze_asuka.py", "rom:cchip_b41-05.43", "rom:b41-04.48", "ic17.bin", "ic26.bin", "ic20.bin", "msm.bin"],
+        ["ts", "-interleave", "ic17.bin", "ic26.bin", "prg_lo.bin"],
+        ["ts", "-interleave", "ic16.bin", "ic25.bin", "prg_hi.bin"],
+        ["ts", "-concat", "prg_lo.bin", "prg_hi.bin", "prg.bin"],
+        ["ts", "-byteswap", "rom:b41-01.15", "fix.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg.bin", "prg.bin"],
+        "fix1": "fix.bin",
+        "scn1": "rom:b41-03.1",
+        "obj1": "rom:b41-02.7",
+        "snd1": "ic20.bin",
+        "msm1": "msm.bin"
+      },
+      "notes": "C-Chip replaced in 68000 code; YM2610 sound translated to the YM2151 + MSM5205.",
+      "expect": {
+        "prg1": "7121cbeb"
+      }
+    },
+    "cadash": {
+      "title": "Cadash (World) [ported]",
+      "sets": ["cadash"],
+      "roms": {
+        "c21_14.ic11": ["5daf13fb", 131072],
+        "c21_16.ic15": ["cbaa2e75", 131072],
+        "c21_13.ic10": ["6b9e0ee9", 131072],
+        "c21_17.ic14": ["bf9a578a", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadash_asuka_ic11.ips", "rom:c21_14.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadash_asuka_ic15.ips", "rom:c21_16.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_13.ic10", "rom:c21_17.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "1f071e7e"
+      }
+    },
+    "cadashf": {
+      "title": "Cadash (France) [ported]",
+      "sets": ["cadashf", "cadash"],
+      "roms": {
+        "c21_19.ic11": ["4d70543b", 131072],
+        "c21_21.ic15": ["0e5b9950", 131072],
+        "c21_18.ic10": ["8a19e59b", 131072],
+        "c21_20.ic14": ["b96acfd9", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashf_asuka_ic11.ips", "rom:c21_19.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashf_asuka_ic15.ips", "rom:c21_21.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_18.ic10", "rom:c21_20.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "550ae3dc"
+      }
+    },
+    "cadashg": {
+      "title": "Cadash (Germany, rev 1) [ported]",
+      "sets": ["cadashg", "cadash"],
+      "roms": {
+        "c21_23-1.ic11": ["30ddbabe", 131072],
+        "c21_25-1.ic15": ["24e10611", 131072],
+        "c21_22-1.ic10": ["daf58b2d", 131072],
+        "c21_24-1.ic14": ["2359b93e", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashg_asuka_ic11.ips", "rom:c21_23-1.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashg_asuka_ic15.ips", "rom:c21_25-1.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_22-1.ic10", "rom:c21_24-1.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "22a3b150"
+      }
+    },
+    "cadashgo": {
+      "title": "Cadash (Germany) [ported]",
+      "sets": ["cadashgo", "cadash"],
+      "roms": {
+        "c21_23.ic11": ["fad37785", 131072],
+        "c21_25.ic15": ["594dda9f", 131072],
+        "c21_22.ic10": ["7610a9b4", 131072],
+        "c21_24.ic14": ["551d947e", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashgo_asuka_ic11.ips", "rom:c21_23.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashgo_asuka_ic15.ips", "rom:c21_25.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_22.ic10", "rom:c21_24.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "004003ea"
+      }
+    },
+    "cadashi": {
+      "title": "Cadash (Italy) [ported]",
+      "sets": ["cadashi", "cadash"],
+      "roms": {
+        "c21_27-1.ic11": ["d1d9e613", 131072],
+        "c21_29-1.ic15": ["142256ef", 131072],
+        "c21_26-1.ic10": ["c9cf6e30", 131072],
+        "c21_28-1.ic14": ["641fc9dd", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashi_asuka_ic11.ips", "rom:c21_27-1.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashi_asuka_ic15.ips", "rom:c21_29-1.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_26-1.ic10", "rom:c21_28-1.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "2540d30f"
+      }
+    },
+    "cadashj": {
+      "title": "Cadash (Japan, rev 2) [ported]",
+      "sets": ["cadashj", "cadash"],
+      "roms": {
+        "c21_04-2.ic11": ["7a9c1828", 131072],
+        "c21_06-2.ic15": ["c9d6440a", 131072],
+        "c21_03-2.ic10": ["30afc320", 131072],
+        "c21_05-2.ic14": ["2bc93209", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashj_asuka_ic11.ips", "rom:c21_04-2.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashj_asuka_ic15.ips", "rom:c21_06-2.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_03-2.ic10", "rom:c21_05-2.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "ee36abcb"
+      }
+    },
+    "cadashj1": {
+      "title": "Cadash (Japan, rev 1) [ported]",
+      "sets": ["cadashj1", "cadash"],
+      "roms": {
+        "c21_04-1.ic11": ["cc22ebe5", 131072],
+        "c21_06-1.ic15": ["26e03304", 131072],
+        "c21_03-1.ic10": ["c54888ed", 131072],
+        "c21_05-1.ic14": ["834018d2", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashj1_asuka_ic11.ips", "rom:c21_04-1.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashj1_asuka_ic15.ips", "rom:c21_06-1.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_03-1.ic10", "rom:c21_05-1.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "841088d1"
+      }
+    },
+    "cadashjo": {
+      "title": "Cadash (Japan) [ported]",
+      "sets": ["cadashjo", "cadash"],
+      "roms": {
+        "c21_04.ic11": ["be7d3f12", 131072],
+        "c21_06.ic15": ["1db3fe02", 131072],
+        "c21_03.ic10": ["7e31c5a3", 131072],
+        "c21_05.ic14": ["a4f4901d", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashjo_asuka_ic11.ips", "rom:c21_04.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashjo_asuka_ic15.ips", "rom:c21_06.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_03.ic10", "rom:c21_05.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "539a2f73"
+      }
+    },
+    "cadashs": {
+      "title": "Cadash (Spain, rev 1) [ported]",
+      "sets": ["cadashs", "cadash"],
+      "roms": {
+        "ic11": ["6c11743e", 131072],
+        "ic15": ["73224356", 131072],
+        "ic10": ["57d659d9", 131072],
+        "ic14": ["53c1b195", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashs_asuka_ic11.ips", "rom:ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashs_asuka_ic15.ips", "rom:ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:ic10", "rom:ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "8e313683"
+      }
+    },
+    "cadashu": {
+      "title": "Cadash (US, rev 2) [ported]",
+      "sets": ["cadashu", "cadash"],
+      "roms": {
+        "c21_14-2.ic11": ["f823d418", 131072],
+        "c21_16-2.ic15": ["90165577", 131072],
+        "c21_13-2.ic10": ["92dcc3ae", 131072],
+        "c21_15-2.ic14": ["f915d26a", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashu_asuka_ic11.ips", "rom:c21_14-2.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashu_asuka_ic15.ips", "rom:c21_16-2.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_13-2.ic10", "rom:c21_15-2.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "c4354a1b"
+      }
+    },
+    "cadashu1": {
+      "title": "Cadash (US, rev 1?) [ported]",
+      "sets": ["cadashu1", "cadash"],
+      "roms": {
+        "c21_14-x.ic11": ["64f22e5e", 131072],
+        "c21_16-x.ic15": ["77f5d79f", 131072],
+        "c21_13-x.ic10": ["488fd6d6", 131072],
+        "c21_15-x.ic14": ["3a44a8b4", 131072],
+        "c21-02.9": ["205883b9", 524288],
+        "c21-01.1": ["1ff6f39c", 524288],
+        "c21-08.38": ["dca495a0", 65536]
+      },
+      "steps": [
+        ["ts", "-ipsapply", "kit:ips/cadashu1_asuka_ic11.ips", "rom:c21_14-x.ic11", "ic11.bin"],
+        ["ts", "-ipsapply", "kit:ips/cadashu1_asuka_ic15.ips", "rom:c21_16-x.ic15", "ic15.bin"],
+        ["ts", "-interleave", "ic11.bin", "ic15.bin", "prg1.bin"],
+        ["ts", "-interleave", "rom:c21_13-x.ic10", "rom:c21_15-x.ic14", "prg2.bin"]
+      ],
+      "parts": {
+        "prg1": ["prg1.bin", "prg2.bin"],
+        "fix1": ["prg1.bin", "prg2.bin"],
+        "scn1": "rom:c21-02.9",
+        "obj1": "rom:c21-01.1",
+        "snd1": "rom:c21-08.38"
+      },
+      "notes": "Runs at 8 MHz with the 68000 clock switch depopulated; needs U2 rev 1.3.",
+      "expect": {
+        "prg1": "216ce43a"
+      }
+    }
+  }
+}

@@ -38,20 +38,16 @@ jobs:
           elif [ "${{ runner.os }}" = "Windows" ]; then BIN=dist/MultiBuilderCLI.exe
           else BIN=dist/MultiBuilder; fi
           python tests/selftest.py --program "$BIN"
-      - name: Package one build-tools zip per kit
+      - name: Package the program
         shell: bash
         run: |
-          mkdir -p packages
-          for kit in kits/*/; do
-            k=$(basename "$kit")
-            rm -rf "stage/$k" && mkdir -p "stage/$k"
-            cp -R "$kit"/. "stage/$k/"
-            if [ "${{ runner.os }}" = "macOS" ]; then cp -R dist/MultiBuilder.app "stage/$k/"
-            elif [ "${{ runner.os }}" = "Windows" ]; then cp dist/MultiBuilder.exe dist/MultiBuilderCLI.exe "stage/$k/"
-            else cp dist/MultiBuilder "stage/$k/"; fi
-            if [ "${{ runner.os }}" = "Windows" ]; then (cd stage && 7z a -tzip "../packages/${k}_build_tools_${{ matrix.name }}.zip" "$k" > /dev/null)
-            else (cd stage && zip -qry "../packages/${k}_build_tools_${{ matrix.name }}.zip" "$k"); fi
-          done
+          mkdir -p packages stage
+          if [ "${{ runner.os }}" = "macOS" ]; then cp -R dist/MultiBuilder.app stage/
+          elif [ "${{ runner.os }}" = "Windows" ]; then cp dist/MultiBuilder.exe dist/MultiBuilderCLI.exe stage/
+          else cp dist/MultiBuilder stage/; fi
+          cp README.md stage/
+          if [ "${{ runner.os }}" = "Windows" ]; then (cd stage && 7z a -tzip "../packages/MultiBuilder_${{ matrix.name }}.zip" . > /dev/null)
+          else (cd stage && zip -qry "../packages/MultiBuilder_${{ matrix.name }}.zip" .); fi
           ls -l packages
       - uses: actions/upload-artifact@v4
         with:

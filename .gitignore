@@ -4,3 +4,6 @@ __pycache__/
 *.pyc
 output/
 *.zip
+
+# kits are distributed separately; keep local ones out of the repository
+kits/
