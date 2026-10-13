@@ -7,6 +7,7 @@ Everything about a particular multi (its chips, its switch, which games fit wher
 - [Getting started](#getting-started)
 - [The main window](#the-main-window)
 - [Donor PCB drop-down](#donor-pcb-drop-down)
+- [Positions that share graphics or sound](#positions-that-share-graphics-or-sound)
 - [What a build produces](#what-a-build-produces)
 - [Saving and loading settings](#saving-and-loading-settings)
 - [Command line](#command-line)
@@ -80,6 +81,17 @@ Choose the board your multi is going into. Changing it can:
 - change the patches applied, or which EPROM images are built and what size they are.
 
 Kits that only fit one board don't show this drop-down.
+
+## Positions that share graphics or sound
+
+On some multis, two positions share one bank of graphics or sound ROM and only have different programs. That's how two regions of the same game fit without doubling the graphics chips. The note beside such a position says what it shares, for example "shares gfx, snd with 0".
+
+![Positions sharing graphics and sound](images/shared_banks.png)
+
+- A sharing position only lists versions of the game chosen at the position it shares with: here, position 1 offers the versions of Example Fighter because position 0 has Example Fighter (World).
+- If you change the game at the owning position, the sharing position switches to a matching version by itself. Check it afterwards.
+- If the owning game has no other versions, the sharing position holds the same game.
+- The build checks that the two versions really have identical graphics and sound. If they don't, it stops and says so; choose different versions.
 
 ## What a build produces
 
@@ -170,5 +182,7 @@ The program exits with code 0 on success and non-zero on any failure, so scripts
 **macOS says the app can't be opened.** Right-click (or Control-click) it, choose **Open**, and confirm. You only need to do this once.
 
 **Nothing happens on Windows when using the command line.** Use `MultiBuilderCLI.exe`, not `MultiBuilder.exe`.
+
+**"... shares its gfx data with ..., but ...'s gfx data differs".** The two versions you chose for a pair of positions that share a bank don't have the same graphics (or sound). Choose another version for one of them.
 
 **Where are my remembered settings?** In `%APPDATA%\multibuilder\settings.json` on Windows and `~/.config/multibuilder/settings.json` on macOS and Linux. Deleting the file resets the program.

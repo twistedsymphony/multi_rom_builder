@@ -1,4 +1,4 @@
-# Multi Builder kit format (format 1, Multi Builder 1.3)
+# Multi Builder kit format (format 1, Multi Builder 1.4)
 
 This is the reference for every key. For a step-by-step walk-through with examples, see [docs/KIT_GUIDE.md](docs/KIT_GUIDE.md); ready-to-copy kits are in [examples/](examples).
 
@@ -48,7 +48,12 @@ Keys starting with `_` are ignored, so you can use them for comments (`"_note": 
 - `allow` lists game ids and/or `@group` names. Only these games (minus any not available for the chosen donor PCB) appear in the slot's drop-down, and the build refuses anything else.
 - `default` is the recommended game for the slot ("Reset to recommended" restores it).
 - `default_by_donor` (optional), e.g. `{"pcbB": "asuka"}`, sets a different recommendation per donor PCB.
-- `note` is shown beside the slot.
+- `note` is shown beside the slot. Slots that share banks also show what they share.
+- `shares` (optional): this slot has no bank of its own in some chips and uses another slot's, for example `{"slot": "0", "outputs": ["gfx", "snd"]}` or `{"slot": "0", "except": ["prg"]}`.
+  - `slot` is the id of the slot that owns the bank. It can't have `shares` itself.
+  - `outputs` lists the shared output ids; `except` shares every output but those.
+  - Those images only hold the owner slots' banks, in slot order (and with `slot_sizes`, the sharing slots' entries are ignored).
+  - The slot only accepts games of the same `family` as the owner slot's game, and the build checks that each shared chip's data is identical for both games. See [docs/KIT_GUIDE.md](docs/KIT_GUIDE.md#10-shared-banks).
 
 ## games
 
@@ -75,6 +80,7 @@ Keys starting with `_` are ignored, so you can use them for comments (`"_note": 
 - **`parts`**: for each output id, the file (or list of files, joined in order) that goes in the slot. The result must be exactly the slot size.
 - **`expect`** (optional): CRC32 a part must come out with. Use it for deterministic patched data, so a build with mismatched kit files fails instead of producing a bad EPROM.
 - **`python_modules`** (optional): modules a `py` step needs. The build stops with a clear message if they're unavailable.
+- **`family`** (optional): games with the same family can share banks (see `shares`). The default is the game's MAME parent: the last entry in `sets`.
 - **`donors`** (optional): the donor PCBs this game can be built for. It is hidden in the drop-downs for other donors.
 - **`donor_overrides`** (optional): per donor PCB, replacement values for any of the game's keys (`steps`, `parts`, `roms`, `expect`, ...). For example:
   `"donor_overrides": {"pcbB": {"steps": [["ts", "-ipsapply", "kit:ips/pcbB/game_ic11.ips", "rom:ic11", "ic11.bin"], ...]}}`
@@ -99,7 +105,8 @@ Keys starting with `_` are ignored, so you can use them for comments (`"_note": 
 - Every input ROM is present with the right CRC and size before anything is built.
 - Every step must succeed: ts_rom_tool errors and script exits stop the build.
 - Each part must be exactly its slot's size, and match `expect` when given.
-- Each image must have the slots' total size (or `size`).
+- A slot that shares banks must hold a game of its owner slot's family, and that game's data for each shared chip must be identical to the owner game's.
+- Each image must have the total size of the slots that own a bank in it (or `size`).
 - Each image is read back after writing.
 - `build_report.txt` lists the slot assignments and each image's size, CRC32 and SHA1.
 - `build_settings.json` records the choices made (see below).

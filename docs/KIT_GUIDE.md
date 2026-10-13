@@ -14,7 +14,8 @@ This guide walks through writing a kit from scratch. [KIT_FORMAT.md](../KIT_FORM
 |---|---|
 | [`01_two_in_one`](../examples/01_two_in_one/asuka2in1.multi.json) | The smallest useful kit: two unmodified games, an OFF/ON switch, ROMs joined and copied as they are. Real games: it builds from real MAME sets. |
 | [`02_region_switch`](../examples/02_region_switch/cadash4.multi.json) | Four regions of a ported game: IPS patches applied at build time, a group of games, `expect` CRCs, a rotary switch. Real games; its IPS patches come from the TASUKA-M8 release package and aren't in this repository. |
-| [`03_donors_and_scripts`](../examples/03_donors_and_scripts/example4in1.multi.json) | Every advanced feature: donor PCB choice, an inverted switch, outputs and patches that depend on the donor, a Python script step, `fill` and pad steps. Made-up board and games, for learning only. |
+| [`03_donors_and_scripts`](../examples/03_donors_and_scripts/example4in1.multi.json) | Donor PCB choice, an inverted switch, outputs and patches that depend on the donor, a Python script step, `fill` and pad steps. Made-up board and games, for learning only. |
+| [`04_shared_banks`](../examples/04_shared_banks/sharedbanks.multi.json) | Shared banks: four positions, each with its own program, but only two banks of graphics and sound, so pairs of positions share them and hold two versions of one game. Made-up board and games. |
 
 For a full-size real kit, [`reference/TASUKA-M8.multi.json`](reference/TASUKA-M8.multi.json) is the kit file of the TASUKA-M8 (an 8-position multi with 27 games), for reference. Its IPS patches and scripts are in the TASUKA-M8 release package, not in this repository.
 
@@ -28,9 +29,10 @@ For a full-size real kit, [`reference/TASUKA-M8.multi.json`](reference/TASUKA-M8
 7. [Patched games](#7-patched-games)
 8. [Script steps](#8-script-steps)
 9. [Donor PCBs](#9-donor-pcbs)
-10. [Test the kit](#10-test-the-kit)
-11. [Publish the kit](#11-publish-the-kit)
-12. [Step and argument reference](#12-step-and-argument-reference)
+10. [Shared banks](#10-shared-banks)
+11. [Test the kit](#11-test-the-kit)
+12. [Publish the kit](#12-publish-the-kit)
+13. [Step and argument reference](#13-step-and-argument-reference)
 
 ## 1. The kit folder
 
@@ -325,9 +327,45 @@ Then, wherever something depends on the board:
 
 Example 3 uses every one of these.
 
-## 10. Test the kit
+## 10. Shared banks
 
-1. **Load it.** Run Multi Builder with `--kit` and `--list`, or open the kit with **Open kit...**. Any mistake in the file (an unknown game in a slot, a missing slot size, a default that isn't allowed in its slot...) is reported with what and where.
+Some chips on a multi don't have room for every position. A common layout gives every position its own program, but makes pairs of positions share one bank of graphics and sound, so two versions of a game (two regions, say) fit without doubling the graphics ROMs. Some kits share everything except the program.
+
+On the board this usually means one or more switch lines aren't wired to that chip. In the kit, it's a `shares` entry on the slot that has no bank of its own:
+
+```json
+"slots": [
+  {"id": "0", "position": "0", "allow": ["@all"], "default": "exfight"},
+  {"id": "1", "position": "1", "allow": ["@all"], "default": "exfightj",
+   "shares": {"slot": "0", "except": ["prg"]}},
+  {"id": "2", "position": "2", "allow": ["@all"], "default": "exrally"},
+  {"id": "3", "position": "3", "allow": ["@all"], "default": "exrallyj",
+   "shares": {"slot": "2", "outputs": ["gfx", "snd"]}}
+]
+```
+
+- `slot` is the id of the slot that owns the bank. That slot can't itself share anything, so a slot always shares with the owner, never with another sharing slot. Several slots can share with the same owner.
+- `outputs` lists the chips this slot takes from the owner. `except` is the other way around: everything except the chips listed.
+- The chips' images only hold the owners' banks, in slot order. In the example, `gfx.bin` holds two 128K banks (positions 0 and 2), while `prg.bin` holds all four positions. Multi Builder assumes the shared chip's banks come in the same order as the slots that own them, which is what you get when the unwired switch lines are the low ones (0+1, 2+3) or the high ones (0+4, 1+5).
+
+**Which games fit.** A sharing slot can only hold a version of the game in its owner slot:
+
+- Games are versions of each other when they have the same **family**, which by default is their MAME parent set: the last entry in `sets`. `exfight`, `exfightj` (`"sets": ["exfightj", "exfight"]`) and `exfightu` are one family.
+- In the window, a sharing slot's drop-down only lists the games of the owner slot's family. When the owner's game changes, the sharing slot switches to a matching version by itself, preferring its recommended game.
+- If the owner's game has no other versions, the sharing slot can hold the same game, provided its `allow` list includes it.
+- Set `"family"` on a game to group games MAME doesn't treat as clones, or to split a MAME family whose versions can't share.
+
+**Which ROMs are shared** is worked out by comparing data, not by trusting file names. Each game in a sharing pair is built in full. For every shared chip, the build then checks that the sharing slot's game produces exactly the same data as the owner's, and stops if it doesn't ("...'s gfx data differs from ..."). The owner's data is what goes in the chip. So a clone whose graphics really are the same as its parent's builds; one with a changed title screen in its graphics ROM is refused instead of quietly getting the wrong graphics. For those, give the two versions different `family` values so they're never offered together.
+
+A clone in MAME normally lists its parent's graphics and sound files, so its `roms` and `parts` can be written just like the parent's (`tools/roms_json.py` does this from `-listxml`). Nothing extra is needed for sharing.
+
+The kit is checked when it loads: every slot's recommended game must be of its owner's recommended game's family.
+
+Example 4 ([`04_shared_banks`](../examples/04_shared_banks/sharedbanks.multi.json)) is a complete kit with two shared pairs.
+
+## 11. Test the kit
+
+1. **Load it.** Run Multi Builder with `--kit` and `--list`, or open the kit with **Open kit...**. Any mistake in the file (an unknown game in a slot, a missing slot size, a default that isn't allowed in its slot, a recommended game that can't share its owner's bank...) is reported with what and where.
 
    ```
    python multibuilder.py --kit MYMULTI/MYMULTI.multi.json --list
@@ -338,7 +376,7 @@ Example 3 uses every one of these.
 4. **Test the images.** Run them in MAME if your multi's board can be described there, then on hardware.
 5. **Run the self-test** from a clone of this repository with your kit folder copied into `kits/<NAME>/` (that folder is git-ignored, so your kit never gets committed here): `python tests/selftest.py`. It loads every kit under `kits/` and `examples/` and checks that every `kit:` file exists for every donor. For the example kits, it also forges ROMs with the right CRCs and builds every game for every donor.
 
-## 11. Publish the kit
+## 12. Publish the kit
 
 Kits are published by their makers, not in this repository. To make a *build-tools* package your builders can just unzip and run:
 
@@ -350,7 +388,7 @@ Builders unzip it and run it, with nothing else to install. Because the program 
 
 When you change a published kit, change the version in its `name`. Settings files record it, so builders can tell which kit version a build came from. Keep slot `id`s and game ids the same, so people's saved settings still load.
 
-## 12. Step and argument reference
+## 13. Step and argument reference
 
 | Step | Does |
 |---|---|

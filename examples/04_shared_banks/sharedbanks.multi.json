@@ -1,0 +1,79 @@
+{
+  "_about": "Example 4: shared banks. The graphics and sound EPROMs only have room for two games, so each pair of switch positions shares one graphics and sound bank and only the program differs. A shared position can only hold a version of the game in the position it shares with (same MAME parent). Made-up board and games; the CRCs are not real. See docs/KIT_GUIDE.md.",
+  "format": 1,
+  "name": "Example Board 4-position, 2-bank (template)",
+  "board": "Example Board",
+  "description": "Template kit with shared graphics and sound banks, for learning the format",
+  "selector": {"title": "Rotary switch", "order": "position", "note": "Positions 0+1 and 2+3 share graphics and sound: pick two versions of the same game for each pair."},
+  "outputs": [
+    {"id": "prg", "file": "prg.bin", "chip": "27C020", "slot_size": "64K", "fill": "FF", "_how": "4 positions x 64K: every position has its own program."},
+    {"id": "gfx", "file": "gfx.bin", "chip": "27C020", "slot_size": "128K", "fill": "FF", "_how": "Only 2 x 128K: positions 1 and 3 use the banks of positions 0 and 2 (the switch's low bit isn't wired to this chip)."},
+    {"id": "snd", "file": "snd.bin", "chip": "27C512", "slot_size": "32K", "fill": "FF"}
+  ],
+  "groups": {"fight": ["exfight", "exfightj", "exfightu"], "rally": ["exrally", "exrallyj"], "all": ["exfight", "exfightj", "exfightu", "exrally", "exrallyj", "exsolo"]},
+  "slots": [
+    {"id": "0", "position": "0", "allow": ["@all"], "default": "exfight"},
+    {"id": "1", "position": "1", "allow": ["@all"], "default": "exfightj", "shares": {"slot": "0", "except": ["prg"]}, "_how": "Takes every output except prg from slot 0. Its drop-down only lists versions of the game chosen at position 0."},
+    {"id": "2", "position": "2", "allow": ["@all"], "default": "exrally"},
+    {"id": "3", "position": "3", "allow": ["@all"], "default": "exrallyj", "shares": {"slot": "2", "outputs": ["gfx", "snd"]}, "_how": "The same thing written the other way: list the shared outputs."}
+  ],
+  "games": {
+    "exfight": {
+      "title": "Example Fighter (World)",
+      "sets": ["exfight"],
+      "roms": {"ef1.p1": ["00d50d95", 32768], "ef2.p2": ["848e817b", 32768], "ef.gfx": ["1662e2ce", 131072], "ef.snd": ["ee7335a0", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:ef1.p1", "rom:ef2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:ef.gfx", "snd": "rom:ef.snd"},
+      "_how": "The parent set: it owns the graphics and sound files its clones share."
+    },
+    "exfightj": {
+      "title": "Example Fighter (Japan)",
+      "sets": ["exfightj", "exfight"],
+      "roms": {"efj1.p1": ["17ece70c", 32768], "efj2.p2": ["ae803ec3", 32768], "ef.gfx": ["1662e2ce", 131072], "ef.snd": ["ee7335a0", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:efj1.p1", "rom:efj2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:ef.gfx", "snd": "rom:ef.snd"},
+      "_how": "A clone with its own program ROMs and the parent's graphics and sound. Its family is its MAME parent (the last entry in sets), so it can share banks with exfight or exfightu."
+    },
+    "exfightu": {
+      "title": "Example Fighter (US)",
+      "sets": ["exfightu", "exfight"],
+      "roms": {"efu1.p1": ["98c4aa39", 32768], "efu2.p2": ["1860f881", 32768], "ef.gfx": ["1662e2ce", 131072], "ef.snd": ["ee7335a0", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:efu1.p1", "rom:efu2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:ef.gfx", "snd": "rom:ef.snd"}
+    },
+    "exrally": {
+      "title": "Example Rally (World)",
+      "sets": ["exrally"],
+      "roms": {"rl1.p1": ["552e478b", 32768], "rl2.p2": ["224af27c", 32768], "rl.gfx": ["67e523c9", 131072], "rl.snd": ["e4039782", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:rl1.p1", "rom:rl2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:rl.gfx", "snd": "rom:rl.snd"}
+    },
+    "exrallyj": {
+      "title": "Example Rally (Japan)",
+      "sets": ["exrallyj", "exrally"],
+      "roms": {"rlj1.p1": ["6561f0d2", 32768], "rlj2.p2": ["f6ebfd7b", 32768], "rl.gfx": ["67e523c9", 131072], "rl.snd": ["e4039782", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:rlj1.p1", "rom:rlj2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:rl.gfx", "snd": "rom:rl.snd"}
+    },
+    "exsolo": {
+      "title": "Example Solo",
+      "sets": ["exsolo"],
+      "roms": {"so1.p1": ["199ee815", 32768], "so2.p2": ["05768b41", 32768], "so.gfx": ["e1eae307", 131072], "so.snd": ["a7f46219", 32768]},
+      "steps": [
+        ["ts", "-interleave", "rom:so1.p1", "rom:so2.p2", "prg.bin"]
+      ],
+      "parts": {"prg": "prg.bin", "gfx": "rom:so.gfx", "snd": "rom:so.snd"},
+      "_how": "No other versions: when it's chosen at position 0 or 2, the position sharing with it can only hold the same game."
+    }
+  }
+}

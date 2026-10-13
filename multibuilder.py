@@ -18,7 +18,7 @@ import importlib.util, contextlib, subprocess, time, datetime, argparse
 sys.dont_write_bytecode = True     # kit scripts and ts_rom_tool load from the kit folder; leave it clean
 
 APP_NAME = 'Multi Builder'
-APP_VERSION = '1.3'
+APP_VERSION = '1.4'
 FORMAT_VERSION = 1
 PROFILE_VERSION = 1
 
@@ -222,6 +222,81 @@ class Kit:
                 return g
         return al[0] if al else None
 
+    # ---- shared banks: a slot can take some outputs' data from another slot ("shares")
+    def slot_by_id(self, sid):
+        for i, s in enumerate(self.slots):
+            if str(s.get('id', i)) == str(sid):
+                return i
+        return None
+
+    def shared_outputs(self, i):
+        """output ids slot i takes from its owner slot (empty if it has no shares)"""
+        sh = self.slots[i].get('shares')
+        if not sh:
+            return []
+        if 'outputs' in sh:
+            return list(sh['outputs'])
+        return [o['id'] for o in self.all_outputs if o['id'] not in sh.get('except', [])]
+
+    def owner(self, i, oid):
+        """the slot whose data slot i uses for output oid (i itself unless it shares that output)"""
+        if oid in self.shared_outputs(i):
+            return self.slot_by_id(self.slots[i]['shares']['slot'])
+        return i
+
+    def owners(self, i, donor=None):
+        """{owner slot index: [output ids]} for the outputs slot i shares (and that are built for this donor)"""
+        built = {o['id'] for o in self.outputs(donor)}
+        out = {}
+        for oid in self.shared_outputs(i):
+            if oid in built:
+                out.setdefault(self.owner(i, oid), []).append(oid)
+        return out
+
+    def family(self, gid, donor=None):
+        """games of one family can share banks: by default, the same MAME parent set"""
+        g = self.game(gid, donor)
+        return g.get('family') or (g.get('sets') or [gid])[-1]
+
+    def choices(self, i, donor, selection):
+        """the games slot i can take, given the games chosen for the slots it shares banks with"""
+        al = self.allowed(self.slots[i], donor)
+        own = self.owners(i, donor)
+        if not own:
+            return al
+        fams = {self.family(selection[j], donor) for j in own if selection[j]}
+        if len(fams) != 1 or any(not selection[j] for j in own):
+            return []
+        return [g for g in al if self.family(g, donor) in fams]
+
+    def resolve_selection(self, selection, donor=None, fixed=()):
+        """make a selection valid: games allowed in their slots, and slots that share banks holding games of
+        the owner's family. Slots in `fixed` (indexes) are left as they are, so the build can report them."""
+        n = len(self.slots)
+        sel = list(selection) if selection else [None] * n
+        order = [i for i in range(n) if not self.slots[i].get('shares')] + \
+                [i for i in range(n) if self.slots[i].get('shares')]
+        for i in order:
+            if i in fixed:
+                continue
+            ch = self.choices(i, donor, sel)
+            if sel[i] in ch:
+                continue
+            pick = None
+            for g in [self.default_for(i, donor)] + [sel[j] for j in self.owners(i, donor)]:
+                if g in ch:
+                    pick = g
+                    break
+            sel[i] = pick or (ch[0] if ch else None)
+        return sel
+
+    def share_note(self, i):
+        sh = self.slots[i].get('shares')
+        if not sh:
+            return ''
+        j = self.slot_by_id(sh['slot'])
+        return 'shares %s with %s' % (', '.join(self.shared_outputs(i)), self.position(j) if j is not None else '?')
+
     def outputs(self, donor=None):
         return [o for o in self.all_outputs if not o.get('donors') or donor is None or donor in o['donors']]
 
@@ -277,6 +352,25 @@ class Kit:
                     errs.append('slot %s allows unknown game %s' % (s.get('id'), a))
             if s.get('default') and s['default'] not in self.allowed(s):
                 errs.append('slot %s: default %s is not in its allowed list' % (s.get('id'), s['default']))
+        oid_list = [o.get('id') for o in self.all_outputs]
+        for i, s in enumerate(self.slots):
+            sh = s.get('shares')
+            if not sh:
+                continue
+            j = self.slot_by_id(sh.get('slot'))
+            if j is None:
+                errs.append('slot %s shares with unknown slot %s' % (s.get('id'), sh.get('slot')))
+                continue
+            if j == i:
+                errs.append('slot %s shares with itself' % s.get('id'))
+            if self.slots[j].get('shares'):
+                errs.append('slot %s shares with slot %s, which itself shares; share with the slot that owns the data'
+                            % (s.get('id'), sh.get('slot')))
+            for x in list(sh.get('outputs', [])) + list(sh.get('except', [])):
+                if x not in oid_list:
+                    errs.append('slot %s shares unknown output %s' % (s.get('id'), x))
+            if 'outputs' in sh and 'except' in sh:
+                errs.append('slot %s: give shares either "outputs" or "except", not both' % s.get('id'))
         if len(set(positions)) != len(positions):
             errs.append('two slots share the same position')
         for gid, g in self.games.items():
@@ -291,6 +385,16 @@ class Kit:
             for d in g.get('donor_overrides', {}):
                 if d not in dids:
                     errs.append('game %s: overrides for unknown donor %s' % (gid, d))
+        if not errs:
+            # the recommended games must fit together: a slot sharing banks needs a game of its owner's family
+            for d in self.donor_ids() or [None]:
+                defaults = [self.default_for(i, d) for i in range(len(self.slots))]
+                ok = self.resolve_selection(defaults, d)
+                for i, (a, b) in enumerate(zip(defaults, ok)):
+                    if a != b:
+                        errs.append('slot %s: the recommended game %s can\'t share banks with %s%s (different family); '
+                                    'recommend a version of the same game' % (self.slots[i].get('id'), a,
+                                    ', '.join(str(defaults[j]) for j in self.owners(i, d)), (' for donor %s' % d) if d else ''))
         if errs:
             raise KitError('Kit configuration problems:\n  ' + '\n  '.join(errs))
 
@@ -389,7 +493,12 @@ def apply_profile(kit, prof):
             sel[i] = g
         else:
             warn.append('%s is not available in %s %s; kept %s' % (g, kit.selector, kit.position(i), sel[i]))
-    return donor, sel, warn
+    fixed = kit.resolve_selection(sel, donor)
+    for i, (a, b) in enumerate(zip(sel, fixed)):
+        if a != b:
+            warn.append('%s can\'t share banks with the game at %s %s; using %s' % (a, kit.selector,
+                        ', '.join(kit.position(j) for j in kit.owners(i, donor)), b))
+    return donor, fixed, warn
 
 
 # --------------------------------------------------------------------------------------------
@@ -666,9 +775,17 @@ def build(kit, roms_dir, out_dir, selection, log, donor=None, keep_work=False, p
     if len(selection) != len(kit.slots):
         raise BuildError('selection has %d entries for %d slots' % (len(selection), len(kit.slots)))
     for i, gid in enumerate(selection):
+        if gid is None:
+            raise BuildError('no game chosen for %s %s' % (kit.selector, kit.position(i)))
         if gid not in kit.allowed(kit.slots[i], donor):
             raise BuildError('%s is not allowed in %s %s%s' % (gid, kit.selector, kit.position(i),
                              (' with the %s donor' % kit.donor_name(donor)) if donor else ''))
+    for i, gid in enumerate(selection):
+        for j, oids in kit.owners(i, donor).items():
+            if kit.family(gid, donor) != kit.family(selection[j], donor):
+                raise BuildError('%s %s shares its %s with %s %s, so it needs a version of %s (%s is not one)'
+                                 % (kit.selector, kit.position(i), ', '.join(oids), kit.selector, kit.position(j),
+                                    selection[j], gid))
     games = list(dict.fromkeys(selection))
     defs = {gid: kit.game(gid, donor) for gid in games}
 
@@ -735,12 +852,28 @@ def build(kit, roms_dir, out_dir, selection, log, donor=None, keep_work=False, p
             if progress:
                 progress((k + 1) / (len(games) + 1))
 
+        for i, gid in enumerate(selection):
+            for j, oids in kit.owners(i, donor).items():
+                for oid in oids:
+                    mine, theirs = parts[gid].get(oid), parts[selection[j]].get(oid)
+                    if mine is not None and mine != theirs:
+                        raise BuildError('%s %s shares its %s data with %s %s, but %s\'s %s data differs from %s\'s. '
+                                         'Choose versions whose %s data is the same.'
+                                         % (kit.selector, kit.position(i), oid, kit.selector, kit.position(j),
+                                            defs[gid]['title'], oid, defs[selection[j]]['title'], oid))
+            if kit.owners(i, donor):
+                log('  %s %s uses the %s data of %s %s' % (kit.selector, kit.position(i),
+                    ', '.join(x for v in kit.owners(i, donor).values() for x in v), kit.selector,
+                    ', '.join(kit.position(j) for j in kit.owners(i, donor))))
+
         written, report = [], []
         for o in kit.outputs(donor):
             sizes = kit.output_slot_sizes(o)
             fill = bytes([int(o.get('fill', '00'), 16)])
             img = b''
             for i, gid in enumerate(selection):
+                if kit.owner(i, o['id']) != i:
+                    continue                      # this slot uses another slot's bank of this chip
                 data = parts[gid].get(o['id'])
                 if data is None:
                     data = fill * sizes[i]
@@ -749,7 +882,8 @@ def build(kit, roms_dir, out_dir, selection, log, donor=None, keep_work=False, p
                                      % (defs[gid]['title'], o['id'], fmt_size(len(data)), kit.selector,
                                         kit.position(i), o['file'], fmt_size(sizes[i])))
                 img += data
-            want = parse_size(o['size']) if 'size' in o else sum(sizes)
+            want = parse_size(o['size']) if 'size' in o else sum(sz for i, sz in enumerate(sizes)
+                                                                    if kit.owner(i, o['id']) == i)
             if len(img) != want:
                 raise BuildError('%s came out %s, but the %s needs %s' % (o['file'], fmt_size(len(img)),
                                                                          o.get('chip', 'EPROM'), fmt_size(want)))
@@ -774,7 +908,9 @@ def build(kit, roms_dir, out_dir, selection, log, donor=None, keep_work=False, p
             f.write('Date:  %s\n\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
             f.write('%s:\n' % kit.selector)
             for i in kit.display_order():
-                f.write('  %-6s %-10s %s\n' % (kit.position(i), selection[i], defs[selection[i]]['title']))
+                note = kit.share_note(i)
+                f.write('  %-6s %-10s %s%s\n' % (kit.position(i), selection[i], defs[selection[i]]['title'],
+                                                 ('   (%s)' % note) if note else ''))
             f.write('\nEPROM images:\n')
             for o, size, crc, sha in report:
                 f.write('  %-12s %-8s %10d bytes  CRC32 %s  SHA1 %s\n' % (o['file'], o.get('chip', ''), size, crc, sha))
@@ -839,12 +975,16 @@ def cli(argv):
         sel = [kit.default_for(i, donor) for i in range(len(kit.slots))]
     else:   # a donor change can make profile choices unavailable
         sel = [g if g in kit.allowed(kit.slots[i], donor) else kit.default_for(i, donor) for i, g in enumerate(sel)]
+    fixed = set()
     for ov in a.slot:
         k, _, g = ov.partition('=')
         i = kit.slot_index(k)
         if i is None:
             print('unknown slot %s' % k); return 2
         sel[i] = g
+        fixed.add(i)
+    # slots sharing banks follow the games chosen for their owner slots (unless set explicitly)
+    sel = kit.resolve_selection(sel, donor, fixed)
     roms = a.roms or (prof or {}).get('roms')
     out = a.out or (prof or {}).get('output')
 
@@ -852,7 +992,9 @@ def cli(argv):
         if kit.donors:
             print('%s: %s' % (kit.donor_title, ', '.join('%s%s' % (d['id'], ' (selected)' if d['id'] == donor else '') for d in kit.donors)))
         for i in kit.display_order():
-            print('%s %s: %s   [%s]' % (kit.selector, kit.position(i), sel[i], ', '.join(kit.allowed(kit.slots[i], donor))))
+            note = kit.share_note(i)
+            print('%s %s: %s   [%s]%s' % (kit.selector, kit.position(i), sel[i], ', '.join(kit.choices(i, donor, sel)),
+                                         ('   (%s)' % note) if note else ''))
         return 0
     if a.save_profile:
         save_profile(a.save_profile, make_profile(kit, donor, sel, roms and os.path.abspath(roms), out and os.path.abspath(out),
@@ -865,7 +1007,7 @@ def cli(argv):
     if a.check:
         loc = RomLocator(roms)
         ok = True
-        for gid in dict.fromkeys(sel):
+        for gid in dict.fromkeys(g for g in sel if g):
             found, prob = check_game(kit, gid, loc, donor)
             print('%-10s %s' % (gid, 'OK' if not prob else '; '.join('%s %s' % p for p in prob)))
             ok = ok and not prob
@@ -991,16 +1133,15 @@ def gui():
             donor = self.donor()
             for c, t in enumerate((k.selector, 'Game', 'ROMs')):
                 ttk.Label(self.slots_frame, text=t, foreground='#555').grid(row=0, column=c, sticky='w', padx=6, pady=(2, 2))
+            sel = k.resolve_selection(selection or [k.default_for(i, donor) for i in range(len(k.slots))], donor)
             for row, i in enumerate(k.display_order()):
                 s = k.slots[i]
                 ttk.Label(self.slots_frame, text=k.position(i), font=('TkDefaultFont', 11, 'bold')).grid(
                     row=row + 1, column=0, sticky='w', padx=10, pady=2)
-                ids = k.allowed(s, donor)
+                ids = k.choices(i, donor, sel)
                 titles = [k.games[g]['title'] for g in ids]
                 var = tk.StringVar()
-                gid = selection[i] if selection else None
-                if gid not in ids:
-                    gid = k.default_for(i, donor)
+                gid = sel[i]
                 if gid:
                     var.set(k.games[gid]['title'])
                 cb = ttk.Combobox(self.slots_frame, textvariable=var, values=titles, state='readonly', width=50)
@@ -1008,8 +1149,9 @@ def gui():
                 cb.bind('<<ComboboxSelected>>', lambda ev: self.on_change())
                 st = ttk.Label(self.slots_frame, text='', width=30)
                 st.grid(row=row + 1, column=2, sticky='w', padx=6)
-                if s.get('note'):
-                    ttk.Label(self.slots_frame, text=s['note'], foreground='#777').grid(row=row + 1, column=3, sticky='w', padx=6)
+                note = '; '.join(x for x in (s.get('note', ''), k.share_note(i)) if x)
+                if note:
+                    ttk.Label(self.slots_frame, text=note, foreground='#777').grid(row=row + 1, column=3, sticky='w', padx=6)
                 self.slot_rows.append((i, var, ids, titles, st, cb))
             if k.selector_note:
                 ttk.Label(self.slots_frame, text=k.selector_note, foreground='#777').grid(
@@ -1158,8 +1300,21 @@ def gui():
             self.on_change()
 
         def on_change(self):
+            self._sync_choices()
             self.save()
             self.refresh_status()
+
+        def _sync_choices(self):
+            """slots that share banks only offer games of their owner slot's family; follow the owner's game"""
+            k, donor = self.kit, self.donor()
+            if not k or not any(s.get('shares') for s in k.slots):
+                return
+            sel = k.resolve_selection(self.selection(), donor)
+            for i, var, ids, titles, st, cb in self.slot_rows:
+                ids[:] = k.choices(i, donor, sel)
+                titles[:] = [k.games[g]['title'] for g in ids]
+                cb.configure(values=titles)
+                var.set(k.games[sel[i]]['title'] if sel[i] else '')
 
         def refresh_status(self):
             if not self.kit:
@@ -1179,6 +1334,7 @@ def gui():
                 cache = {}
                 for i, gid in enumerate(sel):
                     if gid is None:
+                        self.q.put(('status', (gen, i, 'no game fits (see note)', '#b3261e')))
                         continue
                     if gid not in cache:
                         cache[gid] = check_game(self.kit, gid, loc, donor)

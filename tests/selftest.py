@@ -197,21 +197,69 @@ def test_examples(program):
                                 z.writestr(name, made[crc])
             for donor in kit.donor_ids() or [None]:
                 # every game a slot can take for this donor, cycling so each game is built at least once
-                choices = [kit.allowed(s, donor) for s in kit.slots]
-                for r in range(max(len(c) for c in choices)):
+                # (slots that share banks pick from the games that fit the owner slot's game)
+                order = [i for i, s in enumerate(kit.slots) if not s.get('shares')] + \
+                        [i for i, s in enumerate(kit.slots) if s.get('shares')]
+                for r in range(max(len(kit.allowed(s, donor)) for s in kit.slots)):
+                    sel = [None] * len(kit.slots)
+                    for i in order:
+                        c = kit.choices(i, donor, sel)
+                        sel[i] = c[r % len(c)]
                     args = ['--kit', kp2, '--roms', roms, '--out', os.path.join(tmp, 'out')]
                     if donor:
                         args += ['--donor', donor]
-                    for i, c in enumerate(choices):
-                        args += ['--slot', 'id:%s=%s' % (kit.slots[i]['id'], c[r % len(c)])]
+                    for i, g in enumerate(sel):
+                        args += ['--slot', 'id:%s=%s' % (kit.slots[i]['id'], g)]
                     p = subprocess.run(cmd + args, capture_output=True, text=True)
                     what = '%s: build %d%s' % (kit.name, r + 1, (' for %s' % donor) if donor else '')
                     check(p.returncode == 0, what)
                     if p.returncode:
                         print(p.stdout + p.stderr)
                         break
+            if any(s.get('shares') for s in kit.slots):
+                test_shared_banks(kit, kp2, cfg, roms, tmp, cmd)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_shared_banks(kit, kp, cfg, roms, tmp, cmd):
+    """checks for a kit whose slots share banks (example 4)"""
+    out = os.path.join(tmp, 'out_shared')
+    p = subprocess.run(cmd + ['--kit', kp, '--roms', roms, '--out', out], capture_output=True, text=True)
+    check(p.returncode == 0, '%s: default build' % kit.name)
+    for o in kit.outputs():
+        owned = sum(1 for i in range(len(kit.slots)) if kit.owner(i, o['id']) == i)
+        size = os.path.getsize(os.path.join(out, o['file'])) if p.returncode == 0 else -1
+        check(size == owned * mb.parse_size(o['slot_size']),
+              '%s: %s holds only the slots that own a bank (%d)' % (kit.name, o['file'], owned))
+    # a game of another family in a sharing slot is refused, not silently replaced
+    i = next(i for i, s in enumerate(kit.slots) if s.get('shares'))
+    j = kit.slot_by_id(kit.slots[i]['shares']['slot'])
+    fam = kit.family(kit.default_for(j))
+    other = next(g for g in kit.allowed(kit.slots[i]) if kit.family(g) != fam)
+    p = subprocess.run(cmd + ['--kit', kp, '--roms', roms, '--out', out, '--slot', 'id:%s=%s' % (kit.slots[i]['id'], other)],
+                       capture_output=True, text=True)
+    check(p.returncode != 0 and 'shares' in p.stdout, '%s: a game of another family is refused in a sharing slot' % kit.name)
+    # a sharing slot follows its owner when the owner's game changes
+    p = subprocess.run(cmd + ['--kit', kp, '--list', '--slot', 'id:%s=%s' % (kit.slots[j]['id'], other)],
+                       capture_output=True, text=True)
+    line = [ln for ln in p.stdout.splitlines() if ln.startswith('%s %s:' % (kit.selector, kit.position(i)))]
+    check(line and kit.family(line[0].split(':')[1].split()[0]) == kit.family(other),
+          '%s: a sharing slot follows the game chosen for its owner slot' % kit.name)
+    # versions whose shared data differs are refused
+    bad = json.loads(json.dumps(cfg))
+    g = bad['games'][kit.default_for(i)]
+    first = sorted(g['roms'])[0]
+    g['steps'] = g.get('steps', []) + [['ts', '-padf', 'rom:' + first, '128K', 'odd_gfx.bin']]
+    shared_oid = kit.shared_outputs(i)[-1]
+    size = mb.parse_size(next(o for o in kit.all_outputs if o['id'] == shared_oid)['slot_size'])
+    g['steps'][-1][3] = '%dK' % (size // 1024)
+    g['parts'][shared_oid] = 'odd_gfx.bin'
+    kb = os.path.join(os.path.dirname(kp), 'bad.multi.json')
+    json.dump(bad, open(kb, 'w', encoding='utf-8'))
+    p = subprocess.run(cmd + ['--kit', kb, '--roms', roms, '--out', out], capture_output=True, text=True)
+    check(p.returncode != 0 and 'differs' in p.stdout, '%s: versions whose shared data differs are refused' % kit.name)
+    os.remove(kb)
 
 
 if __name__ == '__main__':
